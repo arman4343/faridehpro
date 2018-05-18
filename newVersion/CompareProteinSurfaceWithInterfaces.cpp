@@ -17,6 +17,7 @@ Written by Farideh Halakou
 #include <functional>
 #include <unordered_map>
 #include <map>
+#include <ctype.h>
 #include "My_Functions.h"
 
 
@@ -551,7 +552,7 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 	map<int, int> proteinSurfaceDescriptor_1, proteinSurfaceDescriptor_2;
 	map<int, int> interfaceSideDescriptor_1, interfaceSideDescriptor_2;
 	map<string, string> PrismInterfaceDescriptors;
-
+	map<string, map<int, int>>PrismInterfaceDescriptorsProcessed;
 	int key, value;
 
 	string line, proteinName_1, proteinName_2, interfaceSideName_1 = "noname", interfaceSideName_2 = "noname", interfaceSideName, interfaceDescriptor;
@@ -564,7 +565,7 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 	//Read the target proteins pair list
 	try
 	{
-		pairList.open("D:\\PhD\\prism\\prism_standalone\\pair_list");
+		pairList.open(rootDir+"pair_list");
 
 		if (pairList.fail())
 		{
@@ -587,7 +588,7 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 	//Reads the interfaces list
 	try
 	{
-		interfacesListFile.open("D:\\PhD\\prism\\prism_standalone\\template\\InterfaceList.txt");
+		interfacesListFile.open(rootDir+"InterfaceList.txt");
 
 		if (interfacesListFile.fail())
 		{
@@ -598,6 +599,12 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 		{
 			while (getline(interfacesListFile, line)) 
 			{
+				//solve linux "\n" problem
+				line.erase(std::remove_if(line.begin(),
+					line.end(),
+					[](unsigned char x) {return isspace(x); }),
+					line.end());
+
 				interfacesList.push_back(line);
 				//interfacesList.push_back(line.substr(0, line.size() - 1));	//linux version
 			}
@@ -654,14 +661,41 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 		{
 			while (getline(interfaceDescriptorsLibrary, line))
 			{
+				
+
 				int tabPos = line.find('\t');
 				interfaceSideName = line.substr(0, tabPos);
 				interfaceDescriptor = line.substr(tabPos + 1, line.length()-tabPos);
-				cout << "\ninterfaceSideName: " << interfaceSideName << "\tinterfaceDescriptor: " << interfaceDescriptor;
-				getchar();
+
+				//solve linux "\n" problem
+				interfaceDescriptor.erase(std::remove_if(interfaceDescriptor.begin(),
+					interfaceDescriptor.end(),
+					[](unsigned char x) {return isspace(x); }),
+					interfaceDescriptor.end());
+
+				//cout << "\ninterfaceSideName: " << interfaceSideName << "\tinterfaceDescriptor: " << interfaceDescriptor;
+				//getchar();
 				PrismInterfaceDescriptors[interfaceSideName] = interfaceDescriptor;
+				interfaceSideDescriptor_1.clear();
+
+				int commaPos = -1;
+
+				while (commaPos < (int)interfaceDescriptor.length() - 1)	//Load interface descriptor from file
+				{
+					key = stoi(interfaceDescriptor.substr(commaPos+1 , interfaceDescriptor.find(":", commaPos + 1)));
+					value = stoi(interfaceDescriptor.substr(interfaceDescriptor.find(":", commaPos + 1) + 1, interfaceDescriptor.find(",", commaPos + 1)));
+					//cout << "\nKey: " << key << "\tValue: " << value;
+					interfaceSideDescriptor_1[key] = value;
+					commaPos = interfaceDescriptor.find(",", commaPos + 1);
+					
+				}
+				//cout << interfaceSideDescriptor_1.size();
+				if((int)interfaceSideDescriptor_1.size()>0)
+					PrismInterfaceDescriptorsProcessed[interfaceSideName]= interfaceSideDescriptor_1;
+				//interfaceSideDescriptor_1 = PrismInterfaceDescriptorsProcessed["arman"];
 			}
 		}
+		interfaceDescriptorsLibrary.close();
 	}
 	catch (std::ifstream::failure &FileExcep)
 	{
@@ -698,46 +732,135 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 			proteinSurfaceDescriptor_2.clear();
 
 			//Load protein_1 surface descriptor from file
-			getline(proteinDescriptorFile_1, line);
-			int length = line.length();
-			int commaPos = -1;
+			//getline(proteinDescriptorFile_1, line);
+			//int length = line.length();
+			//int commaPos = -1;
 
-			while (commaPos < length - 1)
+			while (getline(proteinDescriptorFile_1, line,','))
+			{
+				spac = line.find(":", 0);
+				if (spac>0)
+				{
+					key= stoi(line.substr(0, spac));
+					value = stoi(line.substr( spac + 1, line.length() ));
+					proteinSurfaceDescriptor_1[key] = value;
+				}
+				
+				//cout << line<<endl;
+			}
+			/*while (commaPos < length - 1)
 			{
 				key = stoi(line.substr(commaPos + 1, line.find(":", commaPos + 1)));
 				value = stoi(line.substr(line.find(":", commaPos + 1) + 1, line.find(",", commaPos + 1)));
 				//cout << "\nKey: " << key << "\tValue: " << value;
 				proteinSurfaceDescriptor_1[key] = value;
 				commaPos = line.find(",", commaPos + 1);
-			}
+			}*/
 
 
 			//Load protein_2 surface descriptor from file
-			getline(proteinDescriptorFile_2, line);
-			length = line.length();
-			commaPos = -1;
+			//getline(proteinDescriptorFile_2, line);
+			//length = line.length();
+			//commaPos = -1;
 
-			while (commaPos < length - 1)
+			while (getline(proteinDescriptorFile_2, line, ','))
+			{
+				spac = line.find(":", 0);
+				if (spac > 0)
+				{
+					key = stoi(line.substr(0, spac));
+					value = stoi(line.substr(spac + 1, line.length()));
+					proteinSurfaceDescriptor_2[key] = value;
+				}
+				//cout << line<<endl;
+			}
+
+			/*while (commaPos < length - 1)
 			{
 				key = stoi(line.substr(commaPos + 1, line.find(":", commaPos + 1)));
 				value = stoi(line.substr(line.find(":", commaPos + 1) + 1, line.find(",", commaPos + 1)));
 				//cout << "\nKey: " << key << "\tValue: " << value;
 				proteinSurfaceDescriptor_2[key] = value;
 				commaPos = line.find(",", commaPos + 1);
+			}*/
+			int length, commaPos;
+			bool side1Existence = false;
+
+			
+			for (int i = 0; i < interfacesList.size(); ) {
+				interfaceSideName_1 = interfacesList[i];
+				if (i + 1 < interfacesList.size() ){
+					interfaceSideName_2 = interfacesList[i+1];
+				}
+				interfaceSideName_1 = interfaceSideName_1.substr(0, interfaceSideName_1.find('_'));
+				interfaceSideName_2 = interfaceSideName_2.substr(0, interfaceSideName_2.find('_'));
+				if (interfaceSideName_1== interfaceSideName_2 && interfaceSideName_1!="")
+				{
+					interfaceSideName_1 = interfacesList[i];
+					interfaceSideName_2 = interfacesList[i + 1];
+					if ( (int)PrismInterfaceDescriptorsProcessed[interfaceSideName_1].size() > 0 && (int)PrismInterfaceDescriptorsProcessed[interfaceSideName_2].size() > 0 )
+					{
+						
+						if(CompareProteinSurfaceWithInterfaceSide(proteinSurfaceDescriptor_1, PrismInterfaceDescriptorsProcessed[interfaceSideName_1], (float)includeRatio) && CompareProteinSurfaceWithInterfaceSide(proteinSurfaceDescriptor_2, PrismInterfaceDescriptorsProcessed[interfaceSideName_2], (float)includeRatio))
+							interfacesSimilarToProteins << interfaceSideName_1.substr(0, interfaceSideName_1.find('_')) << " \n";
+						else if(CompareProteinSurfaceWithInterfaceSide(proteinSurfaceDescriptor_1, PrismInterfaceDescriptorsProcessed[interfaceSideName_2], (float)includeRatio) && CompareProteinSurfaceWithInterfaceSide(proteinSurfaceDescriptor_2, PrismInterfaceDescriptorsProcessed[interfaceSideName_1], (float)includeRatio))
+							interfacesSimilarToProteins << interfaceSideName_1.substr(0, interfaceSideName_1.find('_')) << " \n";
+					}
+
+					i += 2;
+				}
+				else {
+					i++;
+				}
+
 			}
 
 
+			/*for (auto& kv : PrismInterfaceDescriptors) {
+				std::cout << kv.first << " has value " << kv.second << std::endl;
+				if (interfaceSideName_1 == "")
+				{
+
+					length = line.length();
+
+					if (length > 13)
+					{
+
+						side1Existence = true;
+						interfaceSideDescriptor_1.clear();
+						interfaceSideName_1 = line.substr(0, 12);
+						//cout << "\n" << "interfaceSideName_1: " << interfaceSideName_1;
+						//getchar();
+
+						
+
+						while (commaPos < length - 1)	//Load interface descriptor from file
+						{
+							key = stoi(line.substr(commaPos + 1, line.find(":", commaPos + 1)));
+							value = stoi(line.substr(line.find(":", commaPos + 1) + 1, line.find(",", commaPos + 1)));
+							//cout << "\nKey: " << key << "\tValue: " << value;
+							interfaceSideDescriptor_1[key] = value;
+							commaPos = line.find(",", commaPos + 1);
+						}
+
+					}
+					else
+						side1Existence = false;
+
+					//getchar();
+				}
+
+			}*/
+
+
+			
 
 
 
-
-
-
-
-
+			
 			//Compare each protein pair with all interfaces
-			int lineNumber = 0;
-			bool side1Existence = false;
+			/*int lineNumber = 0;
+			
 
 			//while (getline(interfaceDescriptorsLibrary, line)) //each line has an interface descriptor
 			while (getline(interfaceDescriptorsLibrary, line)) //each line has an interface descriptor
@@ -848,10 +971,10 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 					}
 
 				}
-			}
+			}*/
 
-			interfaceDescriptorsLibrary.clear();
-			interfaceDescriptorsLibrary.seekg(0, ios::beg);
+			//interfaceDescriptorsLibrary.clear();
+			//interfaceDescriptorsLibrary.seekg(0, ios::beg);
 
 		}
 		else
@@ -860,7 +983,7 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 
 	interfacesSimilarToProteins.close();
 	pairList.close();
-	interfaceDescriptorsLibrary.close();
+	
 	return 0;
 }
 
