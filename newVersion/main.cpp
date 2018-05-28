@@ -119,7 +119,7 @@ int main(void)
 	time_t startTime = time(0);
 	cout << "\nComparing protein surfaces with interfaces started at " << time(&startTime);
 	
-	CompareProteinWithInterfaces_v2(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, includeRatio);
+	result = CompareProteinWithInterfaces_v2(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, includeRatio);
 	
 	time_t endTime = time(0);
 	cout << "\nComparing protein surfaces with interfaces finished at " << time(&endTime);
