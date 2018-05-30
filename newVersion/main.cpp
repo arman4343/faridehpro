@@ -30,7 +30,7 @@ int main(void)
 	#elif _WIN32
 		// windows code goes here
 		rootDir = "D:\\PhD\\My_Thesis\\Second_Step\\Data\\Continuous_Fragments_Results\\";
-		rootDir = "N:\\Farideh\\";
+		//rootDir = "N:\\Farideh\\";
 		dirSeperator = "\\";
 	#else
 		//default code goes here
@@ -42,7 +42,7 @@ int main(void)
 	int overlappingResidues = 5;
 	int	expectedMatchedPoints = 5; //one point in each fragment is always at 0, 0, 0 coordinate
 	int binSize = 2;	//used for clustering
-	int includeRatio = 70;
+	int includeRatio = 100;
 	int result = 0;
 	int minNumberOfClusterMembers = 5;
 	//int numberOfClusters, numberOfFragments;
