@@ -550,12 +550,12 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 {
 
 	map<int, int> proteinSurfaceDescriptor_1, proteinSurfaceDescriptor_2;
-	map<int, int> interfaceSideDescriptor_1, interfaceSideDescriptor_2;
+	map<int, int> interfaceSideDescriptorMap, interfaceSideDescriptor_1, interfaceSideDescriptor_2;
 	//map<string, string> PrismInterfaceDescriptors;
 	map<string, map<int, int>>PrismInterfaceDescriptors;
 	int key, value;
 
-	string line, proteinName_1, proteinName_2, interfaceSideName_1 = "noname", interfaceSideName_2 = "noname", interfaceSideName, interfaceDescriptor;
+	string line, proteinName_1, proteinName_2, interfaceSideName_1 = "noname", interfaceSideName_2 = "noname", interfaceSideName, interfaceDescriptorString;
 	ifstream pairList, interfaceDescriptorsLibrary, interfacesListFile;
 	vector<string> interfacesList;
 	ofstream interfacesSimilarToProteins;
@@ -599,7 +599,7 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 		{
 			while (getline(interfacesListFile, line)) 
 			{
-				//solvs linux "\n" problem
+				//solves linux "\n" problem
 				line.erase(std::remove_if(line.begin(),
 					line.end(),
 					[](unsigned char x) {return isspace(x); }),
@@ -627,7 +627,7 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 	try
 	{
 
-		interfacesSimilarToProteins.open(rootDir + "Parallel_Filtering_Results" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + to_string(includeRatio) + "%InterfacesSimilarToProteinPairs.txt");
+		interfacesSimilarToProteins.open(rootDir + "Parallel_Filtering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + to_string(includeRatio) + "%InterfacesSimilarToProteinPairs.txt");
 
 		if (interfacesSimilarToProteins.fail())
 		{
@@ -650,7 +650,7 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 	//Reads the interface descriptors library file to PrismInterfaceDescriptors
 	try
 	{
-		interfaceDescriptorsLibrary.open(rootDir + "Parallel_PRISM_Interface_Descriptors" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "PrismInterfaceDescriptors.txt"); //All PRISM interface descriptors
+		interfaceDescriptorsLibrary.open(rootDir + "Parallel_PRISM_Interface_Descriptors" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "PrismInterfaceDescriptors.txt"); //All PRISM interface descriptors
 
 		if (interfaceDescriptorsLibrary.fail())
 		{
@@ -666,34 +666,34 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 				//int tabPos = line.find('\t');
 				interfaceSideName = line.substr(0, 12);
 				//cout << endl << interfaceSideName;
-				interfaceDescriptor = line.substr(12, line.length()-12);
+				interfaceDescriptorString = line.substr(12, line.length()-12);
 				//cout << endl << interfaceDescriptor;
 
-				//solve linux "\n" problem
-				interfaceDescriptor.erase(std::remove_if(interfaceDescriptor.begin(),
-					interfaceDescriptor.end(),
+				//solves linux "\n" problem
+				interfaceDescriptorString.erase(std::remove_if(interfaceDescriptorString.begin(),
+					interfaceDescriptorString.end(),
 					[](unsigned char x) {return isspace(x); }),
-					interfaceDescriptor.end());
+					interfaceDescriptorString.end());
 
 				//cout << endl << interfaceDescriptor;
 				interfaceSideDescriptor_1.clear();
 				
-				if ((int)interfaceDescriptor.length() > 2)
+				if ((int)interfaceDescriptorString.length() > 2)
 				{
 					int commaPos = -1;
-					while (commaPos < (int)interfaceDescriptor.length() - 1)	//Load interface descriptor from file
+					while (commaPos < (int)interfaceDescriptorString.length() - 1)	//Load interface descriptor from file
 					{
-						key = stoi(interfaceDescriptor.substr(commaPos + 1, interfaceDescriptor.find(":", commaPos + 1)));
-						value = stoi(interfaceDescriptor.substr(interfaceDescriptor.find(":", commaPos + 1) + 1, interfaceDescriptor.find(",", commaPos + 1)));
+						key = stoi(interfaceDescriptorString.substr(commaPos + 1, interfaceDescriptorString.find(":", commaPos + 1)));
+						value = stoi(interfaceDescriptorString.substr(interfaceDescriptorString.find(":", commaPos + 1) + 1, interfaceDescriptorString.find(",", commaPos + 1)));
 						//cout << "\nKey: " << key << "\tValue: " << value;
-						interfaceSideDescriptor_1[key] = value;
-						commaPos = interfaceDescriptor.find(",", commaPos + 1);
+						interfaceSideDescriptorMap[key] = value;
+						commaPos = interfaceDescriptorString.find(",", commaPos + 1);
 
 					}
 
 					//cout << interfaceSideDescriptor_1.size();
-					if ((int)interfaceSideDescriptor_1.size() > 0)
-						PrismInterfaceDescriptors[interfaceSideName] = interfaceSideDescriptor_1;
+					if ((int)interfaceSideDescriptorMap.size() > 0)
+						PrismInterfaceDescriptors[interfaceSideName] = interfaceSideDescriptorMap;
 				}
 				//cout << endl << line;
 			}
@@ -737,8 +737,8 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 		cout << " - " << proteinName_2;
 
 
-		ifstream proteinDescriptorFile_1(rootDir + "Parallel_Protein_Descriptor_Vectors" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + proteinName_1 + "DescriptorVector.txt");
-		ifstream proteinDescriptorFile_2(rootDir + "Parallel_Protein_Descriptor_Vectors" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + proteinName_2 + "DescriptorVector.txt");
+		ifstream proteinDescriptorFile_1(rootDir + "Parallel_Protein_Descriptor_Vectors" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + proteinName_1 + "DescriptorVector.txt");
+		ifstream proteinDescriptorFile_2(rootDir + "Parallel_Protein_Descriptor_Vectors" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + proteinName_2 + "DescriptorVector.txt");
 		if (proteinDescriptorFile_1 && proteinDescriptorFile_2)
 		{
 

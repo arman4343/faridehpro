@@ -17,12 +17,11 @@ int ReadNumberOfFragments(int fragmentLength, int overlappingResidues)
 	int frLn, ovRd, tabPos1, tabPos2;
 	string line;
 	ifstream FragmentsFile;
-	string dataPath = "D:\\PhD\\My_Thesis\\Second_Step\\Data\\";
 
 	//Reads the interfaces list
 	try
 	{
-		FragmentsFile.open(dataPath + "NumberOfFragments.txt");
+		FragmentsFile.open(rootDir + "NumberOfFragments.txt");
 
 		if (FragmentsFile.fail())
 		{
@@ -70,11 +69,10 @@ int ReadNumberOfClusters(int fragmentLength, int overlappingResidues, int expect
 	string line;
 	ifstream clustersInfoFile;
 
-	string dataPath = "D:\\PhD\\My_Thesis\\Second_Step\\Data\\";
 	//Reads the interfaces list
 	try
 	{
-		clustersInfoFile.open(dataPath + "NumberOfClusters.txt");
+		clustersInfoFile.open(rootDir + "NumberOfClusters.txt");
 
 		if (clustersInfoFile.fail())
 		{
@@ -175,7 +173,7 @@ int ExtractFragments(std::list<int> fragNos, int fragmentLength, int overlapping
 
 	try
 	{
-		fragmentsFile = fopen((rootDir + "Protein_Fragments" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + dirSeperator + "ContinuousFragments.txt").c_str(), "r");
+		fragmentsFile = fopen((rootDir + "Protein_Fragments" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + slash + "ContinuousFragments.txt").c_str(), "r");
 		if (fragmentsFile == NULL)
 		{
 			cout << "\nError reading the fragments file.";
@@ -206,7 +204,7 @@ int ExtractFragments(std::list<int> fragNos, int fragmentLength, int overlapping
 
 		try
 		{
-			clusteringFile.open((rootDir + "Random_Fragments" + dirSeperator + "Fragment_" + to_string(fragmentNo) + ".txt").c_str(), ios::out | ios::app);
+			clusteringFile.open((rootDir + "Random_Fragments" + slash + "Fragment_" + to_string(fragmentNo) + ".txt").c_str(), ios::out | ios::app);
 			if (clusteringFile.fail())
 			{
 				cout << "\nError creating the fragment information file.";
@@ -235,3 +233,79 @@ int ExtractFragments(std::list<int> fragNos, int fragmentLength, int overlapping
 	return 0;
 }
 
+//*************************************************************************************
+void TestComparingHashTables()
+{
+	unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> hashTable1;
+	unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> hashTable2;
+
+	Point p;
+
+	p.x = -7, p.y = -8, p.z = -9;
+	AddToHashTable(hashTable1, p, 2, 4, 3);
+	AddToHashTable(hashTable1, p, 1, 2, 3);
+	p.x = 2, p.y = 7, p.z = 3;
+	AddToHashTable(hashTable1, p, 1, 2, 3);
+	p.x = 10, p.y = 8, p.z = -9;
+	AddToHashTable(hashTable1, p, 2, 4, 3);
+	p.x = 12, p.y = 17, p.z = 13;
+	AddToHashTable(hashTable1, p, 5, 3, 4);
+
+	//print the hash table
+	cout << "-------------- Printing Hash Table ---------------" << endl;
+	for (auto it1 = hashTable1.begin(); it1 != hashTable1.end(); ++it1)
+	{
+	cout << it1->first << ":";
+	for (auto it2 = hashTable1[it1->first].begin(); it2 != hashTable1[it1->first].end(); ++it2)
+	{
+	cout << "   " << it2->first << ":";
+	for (auto it3 = hashTable1[it1->first][it2->first].begin(); it3 != hashTable1[it1->first][it2->first].end(); ++it3)
+	{
+	cout << "   " << it3->first << ":";
+	for (int it4 = 0; it4 < it3->second.size(); it4++)
+	{
+	cout << it3->second[it4] << " , ";
+	}
+	cout << endl;
+	}
+	cout << endl;
+	}
+	cout << endl;
+	}
+	
+	p.x = -7, p.y = -8, p.z = -9;
+	AddToHashTable(hashTable2, p, 5, 3, 4);
+	p.x = 2, p.y = 7, p.z = 3;
+	AddToHashTable(hashTable2, p, 5, 4, 3);
+	p.x = 13, p.y = 17, p.z = 13;
+	AddToHashTable(hashTable2, p, 5, 3, 4);
+	
+	//print the hash table
+	cout << "-------------- Printing Hash Table ---------------" << endl;
+	for (auto it1 = hashTable2.begin(); it1 != hashTable2.end(); ++it1)
+	{
+		cout << it1->first << ":";
+		for (auto it2 = hashTable2[it1->first].begin(); it2 != hashTable2[it1->first].end(); ++it2)
+		{
+			cout << "   " << it2->first << ":";
+			for (auto it3 = hashTable2[it1->first][it2->first].begin(); it3 != hashTable2[it1->first][it2->first].end(); ++it3)
+			{
+				cout << "   " << it3->first << ":";
+				for (int it4 = 0; it4 < it3->second.size(); it4++)
+				{
+					cout << it3->second[it4] << " , ";
+				}
+				cout << endl;
+			}
+			cout << endl;
+		}
+		cout << endl;
+	}
+	
+	if (CompareTwoHashTables(hashTable1, hashTable2, 2))
+		cout << "\nHash tables are similar.";
+	else
+		cout << "\nHash tables are NOT similar.";
+
+
+}

@@ -71,7 +71,7 @@ int Extract_NonContinuous_Fragments(int fragmentLength, int overlappingResidues)
 	//Create the fragments file
 	try
 	{
-		fragmentsFile = fopen((rootDir + dirSeperator + "NonContinuous_Fragments_Results" + dirSeperator + "Protein_Fragments" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + dirSeperator + "NonContinuousFragments.txt").c_str(), "wb");
+		fragmentsFile = fopen((rootDir + slash + "NonContinuous_Fragments_Results" + slash + "Protein_Fragments" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + slash + "NonContinuousFragments.txt").c_str(), "wb");
 		if (fragmentsFile == NULL)
 		{
 			cout << "\nError creating the fragments file.";
@@ -277,15 +277,14 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 
 	int numberOfClusters = 0;
 	int numberOfSimilarFragments = 0;
+
 	string *lines;
 	lines = new string[fragmentLength];
 	string similarFragments, line;
 	int seedFragmentNumber;
 	//char rd_buffer[85];
-	string dataPath = "D:\\PhD\\My_Thesis\\Second_Step\\Data\\";
 
 	unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> seedHashTable;
-	//unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> nonSeedHashTable;
 	vector <int> unclusteredFragments;	//A vector of fragments which are all unclustered yet
 	vector <int> remainedUnclustered;
 
@@ -293,6 +292,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 	long fragmentsFileSize;
 	long readsize = 0;
 	char *fragmentsBuffer;
+
 	ofstream clusteringFile;
 	fstream unclusteredFragmentsFile;
 
@@ -300,7 +300,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the unclustered fragments file or creates it if doesn't exist
 	try
 	{
-		unclusteredFragmentsFile.open((dataPath + "Clustering_Results\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "\\UnclusteredFragments.txt").c_str(), fstream::in | fstream::out | fstream::app);
+		unclusteredFragmentsFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "UnclusteredFragments.txt").c_str(), fstream::in | fstream::out | fstream::app);
 		if (unclusteredFragmentsFile.fail())	//If the file doesn't exist it means that it is the first run do we create the list including all fragments
 		{
 			cout << "\nError creting or reading the unclustered fragments file.";
@@ -322,7 +322,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the fragments file
 	try
 	{
-		fragmentsFile = fopen((dataPath + "Protein_Fragments\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "\\fragments.txt").c_str(), "r");
+		fragmentsFile = fopen((rootDir + "Protein_Fragments" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + slash + "ContinuousFragments.txt").c_str(), "r");
 		if (fragmentsFile == NULL)
 		{
 			cout << "\nError reading the fragments file.";
@@ -341,7 +341,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 
 			if (readsize != fragmentsFileSize)
 			{
-				cout << "\nError reading the all of fragments file.";
+				cout << "\nError reading the whole fragments file.";
 				return -1;
 			}
 		}
@@ -362,12 +362,13 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the clustering information file or creates it if doesn't exist
 	try
 	{
-		clusteringFile.open((dataPath + "Clustering_Results\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "\\ClusteringLog.txt").c_str(), ios::out | ios::app);
+		clusteringFile.open((rootDir + "Clustering_Results" + slash +"FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "ClusteringLog.txt").c_str(), ios::out | ios::app);
 		if (clusteringFile.fail())
 		{
-			cout << "\nError creating the clustering information file.";
+			cout << "\nError reading or creating the clustering information file.";
 			return -1;
 		}
+		clusteringFile.close();
 	}
 	catch (std::ifstream::failure &FileExcep)
 	{
@@ -386,10 +387,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 	{
 
 		for (int i = 0; i < numberOfFragments; i++)
-		{
 			unclusteredFragments.push_back(i);
-			//unclusteredFragmentsFile << i << "\t";
-		}
 	}
 	else
 	{
@@ -415,33 +413,32 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 
 
 	srand((unsigned int)time(NULL));
-	char *lOprationPosition;
+	char *positionInFile;
 
 	//Clustering the fragments
 	while (unclusteredFragments.size() > 0)
 	{
+
 		int seed = rand() % unclusteredFragments.size();	//Randomly select one fragment to be the seed
-		//seed = 743643;
 		seedFragmentNumber = unclusteredFragments[seed];
 		cout << "\nSeed fragment: " << seedFragmentNumber << "\t";
 		//cout << "\nunclusteredFragments.size: " << unclusteredFragments.size() << "\n";
+
 		similarFragments = " ";
 		numberOfSimilarFragments = 0;
-
 		unclusteredFragments.erase(unclusteredFragments.begin() + seed);
 
-		int positionInFile = seedFragmentNumber * (fragmentLength * 85);
+		positionInFile = fragmentsBuffer + seedFragmentNumber * (fragmentLength * 85);
 		//cout << "\nPosition in File: " << positionInFile;
-		lOprationPosition = fragmentsBuffer + positionInFile;
 		for (int index = 0; index < fragmentLength; index++)
 		{
-			lines[index].assign(lOprationPosition, lOprationPosition + 85);
-			lOprationPosition += 85;
+			lines[index].assign(positionInFile, positionInFile + 85);
+			positionInFile += 85;
 		}
 
 		seedHashTable.clear();
 
-		//Select three consecutive points as Reference Set (RS) and create the hashtable
+		//Select three consecutive points as Reference Set (RS) and create the hashtable for the seed fragment
 		for (int c = 0; c < fragmentLength - 2; c++)
 			for (int i = c; i < c + 3; i++)
 				for (int j = c; j < c + 3; j++)
@@ -465,7 +462,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 							selectedRS = CalculateGeoTranslation(x1, y1, z1, x2, y2, z2, x3, y3, z3, binSize);
 
 
-							if (selectedRS.Rx != 0 || selectedRS.Ry != 0 || selectedRS.Rz != 0)
+							if (selectedRS.Rx != 0 || selectedRS.Ry != 0 || selectedRS.Rz != 0)	//if they are noncollinear
 							{
 								//Add the second and third points of RS to the hash table
 								AddToHashTable(seedHashTable, selectedRS.p2, i + 1, j + 1, k + 1);
@@ -494,15 +491,15 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 		int fragmentNoGlobal = 0;
 		time_t t = time(0);
 
-#pragma omp parallel //num_threads(16)
+#pragma omp parallel num_threads(16)
 		{
 			//private variabales
 			int fragmentNo = 0;
-			unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> nonSeedHashTable2;
+			unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> nonSeedHashTable;
 			int index2;
 			bool matched2;
 			int c2, i2, j2, k2, f2;
-			char *lOprationPosition2;
+			char *positionInFile2;
 			string *lines2;
 			lines2 = new string[fragmentLength];
 			int quit = 0;
@@ -518,7 +515,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 					fragmentNoGlobal++;
 					if (time(0) - t > 1)
 					{
-						cout << "unclusteredFragments.size: " << unclusteredFragments.size() << "\n" << "fragmentNo" << fragmentNo << "\n";
+						cout << "\nunclusteredFragments.size: " << unclusteredFragments.size() << "\t" << "fragmentNo" << fragmentNo;
 						t = time(0);
 					}
 				}
@@ -529,13 +526,12 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 					break;
 				}
 
-				int positionInFile2 = unclusteredFragments[fragmentNo] * (fragmentLength * 85);
-				//cout << endl << "Fragment no: " << unclusteredFragments[fragmentNo] << "\tPosition in file: " << positionInFile;
-				lOprationPosition2 = fragmentsBuffer + positionInFile2;
+				//cout << "\nFragment no: " << unclusteredFragments[fragmentNo] << "\tPosition in file: " << positionInFile2;
+				positionInFile2 = fragmentsBuffer + unclusteredFragments[fragmentNo] * (fragmentLength * 85);
 				for (index2 = 0; index2 < fragmentLength; index2++)
 				{
-					lines2[index2].assign(lOprationPosition2, lOprationPosition2 + 85);
-					lOprationPosition2 += 85;
+					lines2[index2].assign(positionInFile2, positionInFile2 + 85);
+					positionInFile2 += 85;
 				}
 
 
@@ -550,7 +546,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 								if (i2 != j2 && i2 != k2 && j2 != k2)	//three different points to create RS
 								{
 
-									nonSeedHashTable2.clear();
+									nonSeedHashTable.clear();
 
 									float x1Private = (float)atof(lines2[i2].substr(30, 8).c_str());
 									float y1Private = (float)atof(lines2[i2].substr(38, 8).c_str());
@@ -569,8 +565,8 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 
 									if (selectedRS.Rx != 0 || selectedRS.Ry != 0 || selectedRS.Rz != 0)
 									{
-										AddToHashTable(nonSeedHashTable2, selectedRS.p2, i2 + 1, j2 + 1, k2 + 1);
-										AddToHashTable(nonSeedHashTable2, selectedRS.p3, i2 + 1, j2 + 1, k2 + 1);
+										AddToHashTable(nonSeedHashTable, selectedRS.p2, i2 + 1, j2 + 1, k2 + 1);
+										AddToHashTable(nonSeedHashTable, selectedRS.p3, i2 + 1, j2 + 1, k2 + 1);
 
 										for (f2 = 0; f2 < fragmentLength; f2++)
 										{
@@ -581,13 +577,13 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 												p.y = (float)atof(lines2[f2].substr(38, 8).c_str());
 												p.z = (float)atof(lines2[f2].substr(46, 8).c_str());
 												p = CalculateNewPoint(selectedRS, p, binSize);
-												AddToHashTable(nonSeedHashTable2, p, i2 + 1, j2 + 1, k2 + 1);
+												AddToHashTable(nonSeedHashTable, p, i2 + 1, j2 + 1, k2 + 1);
 											}
 										}
 
-										//compares two hash tables
-										matched2 = CompareTwoHashTables(seedHashTable, nonSeedHashTable2, expectedMatchedPoints);
-										if (matched2) // if the seed fragment and the new one are similar
+										//compares the hashtables of seed fragment and an unclustered fragment
+										matched2 = CompareTwoHashTables(seedHashTable, nonSeedHashTable, expectedMatchedPoints);
+										if (matched2)
 											break;
 									}
 									else {
@@ -624,7 +620,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 		unclusteredFragments = remainedUnclustered;
 		remainedUnclustered.clear();
 
-		unclusteredFragmentsFile.open((dataPath + "Clustering_Results\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "\\UnclusteredFragments.txt").c_str(), fstream::out | fstream::app);
+		unclusteredFragmentsFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "UnclusteredFragments.txt").c_str(), fstream::out | fstream::app);
 		unclusteredFragmentsFile << "SeedFragment:" << seedFragmentNumber << "\t NumberOfUnclusteredFragments:" << unclusteredFragments.size();
 		for (int i = 0; i < (int)unclusteredFragments.size(); i++)	//Writes the unclustered fragments to file
 			unclusteredFragmentsFile << "\t" << unclusteredFragments[i];
@@ -634,14 +630,16 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 
 		if (numberOfSimilarFragments + 1 >= minNumberOfClusterMembers)
 		{
+			clusteringFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "ClusteringLog.txt").c_str(), fstream::out | fstream::app);
 			clusteringFile << "\nCluster_" << ++numberOfClusters << "\t" << seedFragmentNumber << "\t" << similarFragments;
-			int res = WriteHashTableToFile((dataPath + "Clustering_Results\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "\\Clusters.txt").c_str(), numberOfClusters, seedHashTable);
+			clusteringFile.close();
+			int res = WriteHashTableToFile((rootDir + "Clustering_Results" + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "Clusters.txt").c_str(), numberOfClusters, seedHashTable);
 			if (res == -1)
 				break;
 		}
 	}
 
-	clusteringFile.close();
+
 	cout << "\nNumber of clusters: " << numberOfClusters;
 	return numberOfClusters;
 
@@ -685,7 +683,7 @@ int ClusterFragments_v2_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the unclustered fragments file or creates it if doesn't exist
 	try
 	{
-		unclusteredFragmentsFile.open((rootDir + dataPath + "Less_Rotations_Clustering_Results" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "UnclusteredFragments.txt").c_str(), fstream::in | fstream::out | fstream::app);
+		unclusteredFragmentsFile.open((rootDir + dataPath + "Less_Rotations_Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "UnclusteredFragments.txt").c_str(), fstream::in | fstream::out | fstream::app);
 		if (unclusteredFragmentsFile.fail())	//If the file doesn't exist it means that it is the first run do we create the list including all fragments
 		{
 			cout << "\nError creting or reading the unclustered fragments file.";
@@ -707,7 +705,7 @@ int ClusterFragments_v2_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the fragments file
 	try
 	{
-		fragmentsFile = fopen((rootDir + "Protein_Fragments" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + dirSeperator + "fragments.txt").c_str(), "r");
+		fragmentsFile = fopen((rootDir + "Protein_Fragments" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + slash + "fragments.txt").c_str(), "r");
 		if (fragmentsFile == NULL)
 		{
 			cout << "\nError reading the fragments file.";
@@ -745,7 +743,7 @@ int ClusterFragments_v2_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the clustering information file or creates it if doesn't exist
 	try
 	{
-		clusteringFile.open((rootDir + "Clustering_Results" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "ClusteringLog.txt") , ios::out | ios::app);
+		clusteringFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "ClusteringLog.txt") , ios::out | ios::app);
 		if (clusteringFile.fail())
 		{
 			cout << "\nError creating the clustering information file.";
@@ -1075,7 +1073,7 @@ int ClusterFragments_v2_Parallel(int fragmentLength, int numberOfFragments, int 
 		unclusteredFragments = remainedUnclustered;
 		remainedUnclustered.clear();
 
-		unclusteredFragmentsFile.open((rootDir + "Clustering_Results" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "UnclusteredFragments.txt").c_str(), fstream::out | fstream::app);
+		unclusteredFragmentsFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "UnclusteredFragments.txt").c_str(), fstream::out | fstream::app);
 		unclusteredFragmentsFile << "SeedFragment:" << seedFragmentNumber << "\t NumberOfUnclusteredFragments:" << unclusteredFragments.size();
 		for (int i = 0; i < (int)unclusteredFragments.size(); i++)	//Writes the unclustered fragments to file
 			unclusteredFragmentsFile << "\t" << unclusteredFragments[i];
@@ -1086,7 +1084,7 @@ int ClusterFragments_v2_Parallel(int fragmentLength, int numberOfFragments, int 
 		if (numberOfSimilarFragments + 1 >= minNumberOfClusterMembers)
 		{
 			clusteringFile << "\nCluster_" << ++numberOfClusters << "\t" << seedFragmentNumber << "\t" << similarFragments;
-			int res = WriteHashTableToFile((rootDir + "Clustering_Results" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "Clusters.txt").c_str(), numberOfClusters, seedHashTable);
+			int res = WriteHashTableToFile((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "Clusters.txt").c_str(), numberOfClusters, seedHashTable);
 			if (res == -1)
 				break;
 		}
@@ -1149,7 +1147,7 @@ int WriteHashTableToFile(string fname, int numberOfClusters, unordered_map<float
 TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, int binSize)
 {
 	TranslationParameter res;
-	//define Ty1,Tz1,Tx1 to store roation degrees
+	//define Ty1,Tz1,Tx1 to store rotation degrees
 	float Ty1 = 0, Tz1 = 0, Tx1 = 0;
 	float Ry1 = 0, Rz1 = 0, Rx1 = 0;
 	float degree = 0;
@@ -1326,13 +1324,14 @@ TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float
 	res.p3.y = roundf(newy3 / binSize);
 	res.p3.z = roundf(newz3 / binSize);*/
 
-	res.p2.x = (newx2 <= 0 && newx2 > -1) ? 0 : roundf(newx2 / binSize);
-	res.p2.y = (newy2 <= 0 && newy2 > -1) ? 0 : roundf(newy2 / binSize);
-	res.p2.z = (newz2 <= 0 && newz2 > -1) ? 0 : roundf(newz2 / binSize);
+	//-0 problem in C++
+	res.p2.x = (newx2 <= 0 && newx2 > -0.5) ? 0 : roundf(newx2 / binSize);
+	res.p2.y = (newy2 <= 0 && newy2 > -0.5) ? 0 : roundf(newy2 / binSize);
+	res.p2.z = (newz2 <= 0 && newz2 > -0.5) ? 0 : roundf(newz2 / binSize);
 
-	res.p3.x = (newx3 <= 0 && newx3 > -1) ? 0 : roundf(newx3 / binSize);
-	res.p3.y = (newy3 <= 0 && newy3 > -1) ? 0 : roundf(newy3 / binSize);
-	res.p3.z = (newz3 <= 0 && newz3 > -1) ? 0 : roundf(newz3 / binSize);
+	res.p3.x = (newx3 <= 0 && newx3 > -0.5) ? 0 : roundf(newx3 / binSize);
+	res.p3.y = (newy3 <= 0 && newy3 > -0.5) ? 0 : roundf(newy3 / binSize);
+	res.p3.z = (newz3 <= 0 && newz3 > -0.5) ? 0 : roundf(newz3 / binSize);
 
 	return res;
 
@@ -1373,14 +1372,11 @@ Point CalculateNewPoint(TranslationParameter TP, Point P, int binSize)
 	res.z = ((int)(tmpz * 10000 + .5) / 10000.0);
 
 
-	/*res.x = roundf(res.x);
-	res.y = roundf(res.y);
-	res.z = roundf(res.z);*/
-
-	res.x = (res.x <= 0 && res.x > -1) ? 0 : roundf(res.x / binSize);
-	res.y = (res.y <= 0 && res.y > -1) ? 0 : roundf(res.y / binSize);
-	res.z = (res.z <= 0 && res.z > -1) ? 0 : roundf(res.z / binSize);
+	res.x = (res.x <= 0 && res.x > -0.5) ? 0 : roundf(res.x / binSize);
+	res.y = (res.y <= 0 && res.y > -0.5) ? 0 : roundf(res.y / binSize);
+	res.z = (res.z <= 0 && res.z > -0.5) ? 0 : roundf(res.z / binSize);
 	//cout << "X:" << res.x << " ,Y:" << res.y << " ,Z:" << res.z << endl;
+
 	return res;
 }
 
@@ -1407,8 +1403,8 @@ bool CompareTwoHashTables(unordered_map<float, unordered_map<float, unordered_ma
 {
 
 	unordered_map<string, int> matchesHashTable;	//stores each reference set model has how many matched points with the new fragment model
-													//tries to find the x, y, z coordinates saved in nonCentroidHashTable in centroidHashTable
-
+	
+	//tries to find the x, y, z coordinates saved in nonCentroidHashTable in centroidHashTable
 	for (auto it1 = nonCentroidHashTable.begin(); it1 != nonCentroidHashTable.end(); ++it1)
 	{
 		if (centroidHashTable.find(it1->first) != centroidHashTable.end())  //we have found x
@@ -1421,37 +1417,42 @@ bool CompareTwoHashTables(unordered_map<float, unordered_map<float, unordered_ma
 					{
 						if (centroidHashTable[it1->first][it2->first].find(it3->first) != centroidHashTable[it1->first][it2->first].end())  //we have found z
 						{
-							for (int it4 = 0; it4 < it3->second.size(); it4++)
+							//for (int it4 = 0; it4 < it3->second.size(); it4++)
+							for (auto it4 = centroidHashTable[it1->first][it2->first][it3->first].begin(); it4 != centroidHashTable[it1->first][it2->first][it3->first].end(); ++it4)
 							{
-								if (matchesHashTable.find(it3->second[it4]) != matchesHashTable.end())
+								//if (matchesHashTable.find(it3->second[it4]) != matchesHashTable.end())
+								cout << endl << it1->first << '\t' << it2->first << '\t' << it3->first << '\t' << *it4;
+								if (matchesHashTable.find(*it4) != matchesHashTable.end())
 								{
 									//cout << "Adding to hash table.";
-									matchesHashTable[it3->second[it4]]++;
+									//matchesHashTable[it3->second[it4]]++;
+									matchesHashTable[*it4]++;
 								}
 								else
 								{
 									//cout << "Initializing the hash table.";
-									matchesHashTable[it3->second[it4]] = 1;
+									//matchesHashTable[it3->second[it4]] = 1;
+									matchesHashTable[*it4] = 1;
 								}
 							}
 						}
-						else  //not found z
-						{
-							return false;
-						}
+						//else  //not found z
+						//{
+							//return false;
+						//}
 					}//for
 				}
-				else  //not found y
-				{
-					return false;
-				}
+				//else  //not found y
+				//{
+					//return false;
+				//}
 			}//for it2
 		}
-		else  //not found x
-		{
+		//else  //not found x
+		//{
 			//cout << "\nNot found x.";
-			return false;
-		}
+			//return false;
+		//}
 	}//for it1
 
 	int maxMatches = 0;

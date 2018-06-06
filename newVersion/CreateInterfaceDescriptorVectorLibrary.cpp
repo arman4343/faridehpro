@@ -80,7 +80,7 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 	//Creates the interface descriptors library file
 	try
 	{
-		interfaceDescriptorsLibraryFile.open(rootDir + "Parallel_PRISM_Interface_Descriptors" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "PrismInterfaceDescriptors.txt");
+		interfaceDescriptorsLibraryFile.open(rootDir + "Parallel_PRISM_Interface_Descriptors" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "PrismInterfaceDescriptors.txt");
 
 		if (interfaceDescriptorsLibraryFile.fail())
 		{
@@ -104,7 +104,7 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 	try
 	{
 		//clustersFile.open(rootFolder + "Clustering_Results"+dirSepreator+"FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSepreator+"Clusters.txt");
-		clustersFile = fopen((rootDir + "Parallel_Clustering_Results" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "Clusters.txt").c_str(), "rb");
+		clustersFile = fopen((rootDir + "Parallel_Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "Clusters.txt").c_str(), "rb");
 
 
 		fseek(clustersFile, 0, SEEK_END);
@@ -208,7 +208,7 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 			//interfaceFileName = interfaceFileName.substr(0, interfaceFileName.size() - 1);
 
 			//interfaceDescriptorsLibrary = "";
-			ifstream interfaceFile((rootDir + "interfaces" + dirSeperator + interfaceFileName).c_str());	//read the interface file
+			ifstream interfaceFile((rootDir + "interfaces" + slash + interfaceFileName).c_str());	//read the interface file
 
 			if (interfaceFile)
 			{
@@ -424,7 +424,7 @@ int CreateInterfaceDescriptors_v2_LessRotations(int fragmentLength, int overlapp
 	//Creates the interface descriptors library file
 	try
 	{
-		interfaceDescriptorsLibraryFile.open(rootDir + "Less_Rotations_PRISM_Interface_Descriptors" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "PrismInterfaceDescriptors.txt");
+		interfaceDescriptorsLibraryFile.open(rootDir + "Less_Rotations_PRISM_Interface_Descriptors" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "PrismInterfaceDescriptors.txt");
 
 		if (interfaceDescriptorsLibraryFile.fail())
 		{
@@ -448,7 +448,7 @@ int CreateInterfaceDescriptors_v2_LessRotations(int fragmentLength, int overlapp
 	try
 	{
 		//clustersFile.open(rootFolder + "Clustering_Results"+dirSepreator+"FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSepreator+"Clusters.txt");
-		clustersFile = fopen((rootDir + "Less_Rotations_Clustering_Results" + dirSeperator + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + dirSeperator + "Clusters.txt").c_str(), "rb");
+		clustersFile = fopen((rootDir + "Less_Rotations_Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "Clusters.txt").c_str(), "rb");
 
 
 		fseek(clustersFile, 0, SEEK_END);
@@ -550,7 +550,7 @@ int CreateInterfaceDescriptors_v2_LessRotations(int fragmentLength, int overlapp
 
 
 			//interfaceDescriptorsLibrary = "";
-			ifstream interfaceFile((rootDir + "interfaces" + dirSeperator + interfaceFileName).c_str());	//read the interface file
+			ifstream interfaceFile((rootDir + "interfaces" + slash + interfaceFileName).c_str());	//read the interface file
 
 			if (interfaceFile)
 			{

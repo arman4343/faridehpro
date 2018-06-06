@@ -15,7 +15,7 @@ struct TranslationParameter {
 };
 
 extern std::string rootDir;
-extern std::string dirSeperator;
+extern std::string slash;
 
 
 int main(void);
@@ -48,8 +48,8 @@ bool CompareProteinSurfaceWithInterfaceSide(std::map<int, int>, std::map<int, in
 int ReadNumberOfFragments(int, int);
 int ReadNumberOfClusters(int, int, int, int);
 void TestGeometricCalculations(void);
+void TestComparingHashTables(void);
 int CalculateCosineDistance(int, int, int, int, int, int);
-//int ExtractFragments(std::list<int>, int, int);
 
 
 #endif

@@ -18,24 +18,24 @@
 using namespace std;
 using std::string;
 string rootDir;
-string dirSeperator;
+string slash;
 
 int main(void)
 {
 
 	#ifdef linux 
 		//linux code goes here
-		rootDir = "/scratch/users/fhalakou13/";
-		dirSeperator = "/";
+		rootDir = "/home/fhalakou/My_Thesis/Data/New_Continuous_Fragments_Results/";
+		slash = "/";
 	#elif _WIN32
 		// windows code goes here
 		rootDir = "D:\\PhD\\My_Thesis\\Second_Step\\Data\\Continuous_Fragments_Results\\";
 		//rootDir = "N:\\Farideh\\";
-		dirSeperator = "\\";
+		slash = "\\";
 	#else
 		//default code goes here
 		rootDir = "D:\\PhD\\My_Thesis\\Second_Step\\Data\\Continuous_Fragments_Results\\";
-		dirSeperator = "\\";
+		slash = "\\";
 	#endif
 
 	int fragmentLength = 6;
@@ -52,12 +52,12 @@ int main(void)
 	
 	/*
 	time_t startTime = time(0);
-	cout << "\nExtracting fragments started at " << time(&startTime);
+	cout << "\nExtracting fragments started... ";
 
 	numberOfFragments = Extract_NonContinuous_Fragments(fragmentLength, overlappingResidues);
 
 	time_t endTime = time(0);
-	cout << "\nExtracting fragments finished at " << time(&endTime);
+	cout << "\nExtracting fragments finished.";
 	cout << "\nElapsed time: " << to_string(difftime(endTime, startTime));
 	*/
 		
@@ -65,13 +65,13 @@ int main(void)
 
 	/*
 	time_t startTime = time(0);
-	cout << "\nClustering fragments started at " << time(&startTime);
+	cout << "\nClustering fragments started...";
 
 	numberOfFragments = ReadNumberOfFragments(fragmentLength, overlappingResidues);
 	numberOfClusters = ClusterFragments_v1_Parallel(fragmentLength, numberOfFragments, overlappingResidues, expectedMatchedPoints, binSize, minNumberOfClusterMembers);
 
 	time_t endTime = time(0);
-	cout << "\nClustering fragments finished at " << time(&endTime);
+	cout << "\nClustering fragments finished.";
 	cout << "\nElapsed time: " << to_string(difftime(endTime, startTime));
 	*/
 
@@ -115,7 +115,7 @@ int main(void)
 
 	//----------------------------Compare the protein descriptive vectors with interface descriptor vectors--------------------------------
 	
-	
+	/*
 	time_t startTime = time(0);
 	cout << "\nComparing protein surfaces with interfaces started at " << time(&startTime);
 	
@@ -124,12 +124,13 @@ int main(void)
 	time_t endTime = time(0);
 	cout << "\nComparing protein surfaces with interfaces finished at " << time(&endTime);
 	cout << "\nElapsed time: " << to_string(difftime(endTime, startTime)); 
-	
+	*/
 
 
 	//--------------------------- Debugging -----------------------------------------
 	
 	//TestGeometricCalculations();
+	TestComparingHashTables();
 	
 	//numberOfClusters = ReadNumberOfClusters(fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
 	//result = CalculateCosineDistance(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, numberOfInterfaces, numberOfClusters);
