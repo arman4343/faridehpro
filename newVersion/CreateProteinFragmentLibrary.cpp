@@ -300,7 +300,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the unclustered fragments file or creates it if doesn't exist
 	try
 	{
-		unclusteredFragmentsFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "UnclusteredFragments.txt").c_str(), fstream::in | fstream::out | fstream::app);
+		unclusteredFragmentsFile.open((rootDir + "Clustering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/UnclusteredFragments.txt").c_str(), fstream::in | fstream::out | fstream::app);
 		if (unclusteredFragmentsFile.fail())	//If the file doesn't exist it means that it is the first run do we create the list including all fragments
 		{
 			cout << "\nError creting or reading the unclustered fragments file.";
@@ -322,7 +322,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the fragments file
 	try
 	{
-		fragmentsFile = fopen((rootDir + "Protein_Fragments" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + slash + "ContinuousFragments.txt").c_str(), "r");
+		fragmentsFile = fopen((rootDir + "Protein_Fragments/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "/ContinuousFragments.txt").c_str(), "r");
 		if (fragmentsFile == NULL)
 		{
 			cout << "\nError reading the fragments file.";
@@ -362,7 +362,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 	//Reads the clustering information file or creates it if doesn't exist
 	try
 	{
-		clusteringFile.open((rootDir + "Clustering_Results" + slash +"FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "ClusteringLog.txt").c_str(), ios::out | ios::app);
+		clusteringFile.open((rootDir + "Clustering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/ClusteringLog.txt").c_str(), ios::out | ios::app);
 		if (clusteringFile.fail())
 		{
 			cout << "\nError reading or creating the clustering information file.";
@@ -620,7 +620,7 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 		unclusteredFragments = remainedUnclustered;
 		remainedUnclustered.clear();
 
-		unclusteredFragmentsFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "UnclusteredFragments.txt").c_str(), fstream::out | fstream::app);
+		unclusteredFragmentsFile.open((rootDir + "Clustering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/UnclusteredFragments.txt").c_str(), fstream::out | fstream::app);
 		unclusteredFragmentsFile << "SeedFragment:" << seedFragmentNumber << "\t NumberOfUnclusteredFragments:" << unclusteredFragments.size();
 		for (int i = 0; i < (int)unclusteredFragments.size(); i++)	//Writes the unclustered fragments to file
 			unclusteredFragmentsFile << "\t" << unclusteredFragments[i];
@@ -630,10 +630,10 @@ int ClusterFragments_v1_Parallel(int fragmentLength, int numberOfFragments, int 
 
 		if (numberOfSimilarFragments + 1 >= minNumberOfClusterMembers)
 		{
-			clusteringFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "ClusteringLog.txt").c_str(), fstream::out | fstream::app);
+			clusteringFile.open((rootDir + "Clustering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/ClusteringLog.txt").c_str(), fstream::out | fstream::app);
 			clusteringFile << "\nCluster_" << ++numberOfClusters << "\t" << seedFragmentNumber << "\t" << similarFragments;
 			clusteringFile.close();
-			int res = WriteHashTableToFile((rootDir + "Clustering_Results" + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "Clusters.txt").c_str(), numberOfClusters, seedHashTable);
+			int res = WriteHashTableToFile((rootDir + "Clustering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/Clusters.txt").c_str(), numberOfClusters, seedHashTable);
 			if (res == -1)
 				break;
 		}
@@ -1421,16 +1421,14 @@ bool CompareTwoHashTables(unordered_map<float, unordered_map<float, unordered_ma
 							for (auto it4 = centroidHashTable[it1->first][it2->first][it3->first].begin(); it4 != centroidHashTable[it1->first][it2->first][it3->first].end(); ++it4)
 							{
 								//if (matchesHashTable.find(it3->second[it4]) != matchesHashTable.end())
-								cout << endl << it1->first << '\t' << it2->first << '\t' << it3->first << '\t' << *it4;
+								//cout << endl << it1->first << '\t' << it2->first << '\t' << it3->first << '\t' << *it4;
 								if (matchesHashTable.find(*it4) != matchesHashTable.end())
 								{
-									//cout << "Adding to hash table.";
 									//matchesHashTable[it3->second[it4]]++;
 									matchesHashTable[*it4]++;
 								}
 								else
 								{
-									//cout << "Initializing the hash table.";
 									//matchesHashTable[it3->second[it4]] = 1;
 									matchesHashTable[*it4] = 1;
 								}
@@ -1455,19 +1453,14 @@ bool CompareTwoHashTables(unordered_map<float, unordered_map<float, unordered_ma
 		//}
 	}//for it1
 
-	int maxMatches = 0;
-
 	for (auto it = matchesHashTable.begin(); it != matchesHashTable.end(); ++it)
 	{
 		//cout << matchesHashTable[it->first] << endl;
-		if (matchesHashTable[it->first] > maxMatches)
-			maxMatches = matchesHashTable[it->first];
+		if (matchesHashTable[it->first] >= expectedMatchedPoints)
+			return true;
 	}
-	//cout << "\nMax matches is: " << maxMatches;
-	if (maxMatches >= expectedMatchedPoints)
-		return true;
-	else
-		return false;
+
+	return false;
 
 }
 

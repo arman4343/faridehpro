@@ -29,23 +29,23 @@ int main(void)
 		slash = "/";
 	#elif _WIN32
 		// windows code goes here
-		rootDir = "D:\\PhD\\My_Thesis\\Second_Step\\Data\\Continuous_Fragments_Results\\";
+		rootDir = "D:/PhD/My_Thesis/Second_Step/Data/New_Continuous_Fragments_Results/";
 		//rootDir = "N:\\Farideh\\";
-		slash = "\\";
+		slash = "/";
 	#else
 		//default code goes here
-		rootDir = "D:\\PhD\\My_Thesis\\Second_Step\\Data\\Continuous_Fragments_Results\\";
-		slash = "\\";
+		rootDir = "D:/PhD/My_Thesis/Second_Step/Data/New_Continuous_Fragments_Results/";
+		slash = "/";
 	#endif
 
-	int fragmentLength = 6;
-	int overlappingResidues = 5;
-	int	expectedMatchedPoints = 5; //one point in each fragment is always at 0, 0, 0 coordinate
+	int fragmentLength = 3;
+	int overlappingResidues = 2;
+	int	expectedMatchedPoints = 2; //one point in each fragment is always at 0, 0, 0 coordinate
 	int binSize = 2;	//used for clustering
-	int includeRatio = 100;
+	//int includeRatio = 100;
 	int result = 0;
 	int minNumberOfClusterMembers = 5;
-	//int numberOfClusters, numberOfFragments;
+	int numberOfClusters, numberOfFragments;
 	//int numberOfInterfaces = 45222;
 
 	//----------------------------Extract overlapping fragments from PRISM interfaces--------------------------------
@@ -68,6 +68,7 @@ int main(void)
 	cout << "\nClustering fragments started...";
 
 	numberOfFragments = ReadNumberOfFragments(fragmentLength, overlappingResidues);
+	cout << "\nNumber of fragments: " << numberOfFragments;
 	numberOfClusters = ClusterFragments_v1_Parallel(fragmentLength, numberOfFragments, overlappingResidues, expectedMatchedPoints, binSize, minNumberOfClusterMembers);
 
 	time_t endTime = time(0);
@@ -77,19 +78,19 @@ int main(void)
 
 	//----------------------------Create the descriptive vectors for the PRISM interfaces--------------------------------
 
-	/*
+	
 	time_t startTime = time(0);
-	cout << "\nCreating interface descriptor vectors started at " << time(&startTime);
+	cout << "\nCreating interface descriptor vectors started...";
 	
 
 	//numberOfClusters = ReadNumberOfClusters(fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
 	//cout << numberOfClusters;
-	result = CreateInterfaceDescriptors_v2_LessRotations(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, numberOfClusters);
+	result = CreateInterfaceDescriptors_v2_Parallel(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints);
 
 	time_t endTime = time(0);
-	cout << "\nCreating interface descriptor vectors finished at " << time(&endTime);
+	cout << "\nCreating interface descriptor vectors finished.";
 	cout << "\nElapsed time: " << to_string(difftime(endTime, startTime));
-	*/
+	
 	
 	//----------------------------Create the descriptive vectors for the protein surfaces--------------------------------
 	
@@ -130,13 +131,13 @@ int main(void)
 	//--------------------------- Debugging -----------------------------------------
 	
 	//TestGeometricCalculations();
-	TestComparingHashTables();
+	//TestComparingHashTables();
 	
 	//numberOfClusters = ReadNumberOfClusters(fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
 	//result = CalculateCosineDistance(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, numberOfInterfaces, numberOfClusters);
 	
-	//list<int> fragmentNos = {174, 1945, 1038772};
-	//result = ExtractFragments(fragmentNos,fragmentLength, overlappingResidues);
+	//list<int> fragmentNos = { 832067, 1210273, 911455};
+	//result = ExtractFragmentsInClusters(fragmentNos,fragmentLength, overlappingResidues);
 
 	//--------------------------------------------------------------------------------
 

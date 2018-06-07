@@ -151,10 +151,10 @@ This functions extracts some fragments from the fragments file which belong to t
 and save them as text files. Then we can visualize them in Chimera to see how much similar they are.
 */
 
-int ExtractFragments(std::list<int> fragNos, int fragmentLength, int overlappingResidues)
+int ExtractFragmentsInClusters(list<int> fragNos, int fragmentLength, int overlappingResidues)
 {
 
-	std::list<int> fragmentNos = fragNos;
+	list<int> fragmentNos = fragNos;
 
 	//open file
 	FILE * fragmentsFile;
@@ -173,14 +173,14 @@ int ExtractFragments(std::list<int> fragNos, int fragmentLength, int overlapping
 
 	try
 	{
-		fragmentsFile = fopen((rootDir + "Protein_Fragments" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + slash + "ContinuousFragments.txt").c_str(), "r");
+		fragmentsFile = fopen((rootDir + "Protein_Fragments/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "/ContinuousFragments.txt").c_str(), "r");
 		if (fragmentsFile == NULL)
 		{
 			cout << "\nError reading the fragments file.";
 			return -1;
 		}
 	}
-	catch (std::ifstream::failure &FileExcep)
+	catch (ifstream::failure &FileExcep)
 	{
 		cout << FileExcep.what() << endl;
 		return -1;
@@ -204,7 +204,7 @@ int ExtractFragments(std::list<int> fragNos, int fragmentLength, int overlapping
 
 		try
 		{
-			clusteringFile.open((rootDir + "Random_Fragments" + slash + "Fragment_" + to_string(fragmentNo) + ".txt").c_str(), ios::out | ios::app);
+			clusteringFile.open((rootDir + "Random_Fragments/Fragment_" + to_string(fragmentNo) + ".txt").c_str(), ios::out | ios::app);
 			if (clusteringFile.fail())
 			{
 				cout << "\nError creating the fragment information file.";
@@ -212,7 +212,7 @@ int ExtractFragments(std::list<int> fragNos, int fragmentLength, int overlapping
 			}
 			clusteringFile.write(fragmentsBuffer, (fragmentLength * 85));
 		}
-		catch (std::ifstream::failure &FileExcep)
+		catch (ifstream::failure &FileExcep)
 		{
 			cout << FileExcep.what() << endl;
 			return -1;
@@ -242,14 +242,16 @@ void TestComparingHashTables()
 	Point p;
 
 	p.x = -7, p.y = -8, p.z = -9;
-	AddToHashTable(hashTable1, p, 2, 4, 3);
-	AddToHashTable(hashTable1, p, 1, 2, 3);
+	AddToHashTable(hashTable1, p, 2, 5, 3);
 	p.x = 2, p.y = 7, p.z = 3;
 	AddToHashTable(hashTable1, p, 1, 2, 3);
+	AddToHashTable(hashTable1, p, 2, 4, 3);
 	p.x = 10, p.y = 8, p.z = -9;
 	AddToHashTable(hashTable1, p, 2, 4, 3);
 	p.x = 12, p.y = 17, p.z = 13;
 	AddToHashTable(hashTable1, p, 5, 3, 4);
+	p.x = 13, p.y = 17, p.z = 13;
+	AddToHashTable(hashTable1, p, 2, 3, 3);
 
 	//print the hash table
 	cout << "-------------- Printing Hash Table ---------------" << endl;
@@ -273,12 +275,12 @@ void TestComparingHashTables()
 	cout << endl;
 	}
 	
+	p.x = 13, p.y = 17, p.z = 13;
+	AddToHashTable(hashTable2, p, 5, 3, 4);
 	p.x = -7, p.y = -8, p.z = -9;
 	AddToHashTable(hashTable2, p, 5, 3, 4);
 	p.x = 2, p.y = 7, p.z = 3;
 	AddToHashTable(hashTable2, p, 5, 4, 3);
-	p.x = 13, p.y = 17, p.z = 13;
-	AddToHashTable(hashTable2, p, 5, 3, 4);
 	
 	//print the hash table
 	cout << "-------------- Printing Hash Table ---------------" << endl;
@@ -309,3 +311,34 @@ void TestComparingHashTables()
 
 
 }
+
+
+//*************************************************************************************
+void PrintHashTable(unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>>& hashTable)
+{
+	
+	cout << "\n-------------- Printing Hash Table ---------------" << endl;
+
+	for (auto it1 = hashTable.begin(); it1 != hashTable.end(); ++it1)
+	{
+		//cout << it1->first << ":";
+		for (auto it2 = hashTable[it1->first].begin(); it2 != hashTable[it1->first].end(); ++it2)
+		{
+			//cout << "   " << it2->first << ":";
+			for (auto it3 = hashTable[it1->first][it2->first].begin(); it3 != hashTable[it1->first][it2->first].end(); ++it3)
+			{
+				cout << it1->first << ", " << it2->first << ", " << it3->first << "     ";
+				for (int it4 = 0; it4 < it3->second.size(); it4++)
+				{
+					cout << it3->second[it4] << "  ";
+				}
+				cout << endl;
+			}
+			//cout << endl;
+		}
+		//cout << endl;
+	}
+
+}
+
+
