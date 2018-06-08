@@ -33,6 +33,7 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 {
 
 	string line;
+	string interfacesPath = "D:/PhD/prism/prism_standalone/template/interfaces/";
 	int incrementValue = fragmentLength - overlappingResidues;
 	bool continuousResidues;	//To see if the extracted fragment is continuous or not
 
@@ -41,7 +42,7 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 	char * clustersBuffer;
 	int clustersFileSize;
 	ofstream interfaceDescriptorsLibraryFile;
-	vector <string> clusters;
+	//vector <string> clusters;
 
 	list<string> interfacesList;
 	vector<unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>>> fragmentHashTables;
@@ -52,7 +53,6 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 	try
 	{
 		interfacesListFile.open(rootDir + "InterfaceList.txt");
-
 		if (interfacesListFile.fail())
 		{
 			cout << "\nError reading the interface list file.";
@@ -139,9 +139,10 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 			{
 				if (fHashTable.size()>0)
 				{
+					//Add the cluster hash table to fragmentHashTables vector
 					fragmentHashTables.push_back(fHashTable);
-					PrintHashTable(fHashTable);
-					getchar();
+					//PrintHashTable(fHashTable);
+					//getchar();
 					fHashTable.clear();
 				}
 			}
@@ -169,8 +170,8 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 		if (fHashTable.size()>0)	//To get the last cluster
 		{
 			fragmentHashTables.push_back(fHashTable);
-			PrintHashTable(fHashTable);
-			getchar();
+			//PrintHashTable(fHashTable);
+			//getchar();
 		}
 		cout << "fragmentHashTables size: " << fragmentHashTables.size();
 	}
@@ -185,9 +186,8 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 		return -1;
 	}
 
-/*
 
-
+//Each thread is responsible for creating the descriptor of an interface side
 #pragma omp parallel
 	{
 		string interfaceFileName;
@@ -196,14 +196,12 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 		map<int, int> interfaceDescriptor;
 		int finish = 0;
 
-		while (true) //each line has an interface partner name
+		while (true)
 		{
 #pragma omp critical
 			{
 				if (interfacesList.empty())
-				{
 					finish = 1;
-				}
 				else
 				{
 					interfaceFileName = interfacesList.front();
@@ -216,10 +214,9 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 			{
 				break;
 			}
-			//interfaceFileName = interfaceFileName.substr(0, interfaceFileName.size() - 1);
 
-			//interfaceDescriptorsLibrary = "";
-			ifstream interfaceFile((rootDir + "interfaces" + slash + interfaceFileName).c_str());	//read the interface file
+
+			ifstream interfaceFile((interfacesPath + interfaceFileName).c_str());	//read the interface file
 
 			if (interfaceFile)
 			{
@@ -255,14 +252,14 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 							if (previousResidueNumber < nextResidueNumber - 1)
 							{
 								continuousResidues = false;
-								lineIndex1 = lineIndex2 - incrementValue;///////// As icrement value is added in the first loop
+								lineIndex1 = lineIndex2 - incrementValue; // As icrement value is added in the first loop
 								break;
 							}
 							previousResidueNumber = nextResidueNumber;
 						}
 
 
-						if (continuousResidues == true)	//We made sure that it is a continuous fragment. Now we want to find which fragment in our fragment library is similar to this fragment
+						if (continuousResidues == true)
 						{
 
 							unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> clusterHashTable;
@@ -271,10 +268,10 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 
 							while (!matched && scannedClusters <= fragmentHashTables.size()) //till we find which cluster hash table is similar to the fragment hashtable or none of them are similar
 							{
+
 								//cout << "\n" << scannedClusters;
 
-								//LoadHashTableFromFile(clustersFile, scannedClusters, clusterHashTable);
-								//LoadHashTableFromFile(clustersFilebuffer, scannedClusters, clusterHashTable);
+								clusterHashTable.clear();
 								clusterHashTable = fragmentHashTables[scannedClusters - 1];
 
 								for (int c = lineIndex1; c < (lineIndex1 + fragmentLength - 2); c++)	// we select three consecutive points as Reference Set (RS)
@@ -304,7 +301,7 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 													TranslationParameter selectedRS;
 													selectedRS = CalculateGeoTranslation(x1, y1, z1, x2, y2, z2, x3, y3, z3, binSize);
 
-													if (selectedRS.Rx != 0 || selectedRS.Ry != 0 || selectedRS.Rz != 0)
+													if (selectedRS.Rx != 1000 || selectedRS.Ry != 1000 || selectedRS.Rz != 1000)
 													{
 														AddToHashTable(fragmentHashTable, selectedRS.p2, i + 1, j + 1, k + 1);
 														AddToHashTable(fragmentHashTable, selectedRS.p3, i + 1, j + 1, k + 1);
@@ -352,15 +349,14 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 					}
 #pragma omp critical
 					{
-						interfaceDescriptorsLibraryFile << interfaceFileName;
-						interfaceDescriptorsLibraryFile << "\t";
+						interfaceDescriptorsLibraryFile << interfaceFileName << "\t";
 						for (auto it1 = interfaceDescriptor.begin(); it1 != interfaceDescriptor.end(); ++it1)
 							interfaceDescriptorsLibraryFile << it1->first << ":" << it1->second << ",";
 						interfaceDescriptorsLibraryFile << "\n";
 					}
 				}
 				else
-					cout << "\n" << interfaceFileName << "interface file is shorter than fragment length.";
+					cout << "\nInterface " << interfaceFileName << " is shorter than fragment length.";
 			}
 			else
 				cout << "\nError reading the interface file " + interfaceFileName;
@@ -369,7 +365,6 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 		}
 	}
 
-	*/
 
 	interfaceDescriptorsLibraryFile.close();
 

@@ -78,7 +78,7 @@ int main(void)
 
 	//----------------------------Create the descriptive vectors for the PRISM interfaces--------------------------------
 
-	
+	/*
 	time_t startTime = time(0);
 	cout << "\nCreating interface descriptor vectors started...";
 	
@@ -90,7 +90,7 @@ int main(void)
 	time_t endTime = time(0);
 	cout << "\nCreating interface descriptor vectors finished.";
 	cout << "\nElapsed time: " << to_string(difftime(endTime, startTime));
-	
+	*/
 	
 	//----------------------------Create the descriptive vectors for the protein surfaces--------------------------------
 	
@@ -136,7 +136,7 @@ int main(void)
 	//numberOfClusters = ReadNumberOfClusters(fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
 	//result = CalculateCosineDistance(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, numberOfInterfaces, numberOfClusters);
 	
-	//list<int> fragmentNos = { 832067, 1210273, 911455};
+	//list<int> fragmentNos = {466784, 25436, 1553023 };
 	//result = ExtractFragmentsInClusters(fragmentNos,fragmentLength, overlappingResidues);
 
 	//--------------------------------------------------------------------------------

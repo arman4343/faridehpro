@@ -124,24 +124,42 @@ Just to test the correctness of Geometric Hashing code
 void TestGeometricCalculations(void)
 {
 
-	/*		ATOM    305  CA  SER A  38 - 6.021  35.657   8.563  1.00 41.39           C	ATOM    311  CA  LEU A  39 - 9.078  37.570   9.943  1.00 40.77           C	ATOM    319  CA  ASN A  40 - 10.190  41.078  10.154  1.00 55.79           C	ATOM    327  CA  ALA A  41 - 12.706  42.490  12.323  1.00 64.31           C
+	/*		ATOM    305  CA  SER A  38 - 6.021  35.657   8.563  1.00 41.39   C	ATOM    311  CA  LEU A  39 - 9.078  37.570   9.943  1.00 40.77           C	ATOM    319  CA  ASN A  40 - 10.190  41.078  10.154  1.00 55.79           C	ATOM    327  CA  ALA A  41 - 12.706  42.490  12.323  1.00 64.31           C
 	*/
 
-	cout << "Selected three points to create the model are: (4,2,3)\n";
-	int x1 = -12.706, y1 = 42.490, z1 = 12.323;
+	/*
+	ATOM   4659  CA AALA B 133      45.293 -53.074 194.667  0.60 65.88           C  	ATOM   4669  CA AARG B 134      42.233 -55.298 194.504  0.60 73.34           C  	ATOM   4691  CA BPHE B 135      42.024 -56.189 193.815  0.40 72.72           C  
+	*/
+
+	
+	/*int x1 = -12.706, y1 = 42.490, z1 = 12.323;
 	int x2 = -9.078, y2 = 37.570, z2 = 9.943;
-	int x3 = -10.190, y3 = 41.078, z3 = 10.154;
+	int x3 = -10.190, y3 = 41.078, z3 = 10.154;*/
+
+	/*float x1 = 45.293, y1 = -53.074, z1 = 194.667;
+	float x2 = 42.233, y2 = -55.298, z2 = 194.504;
+	float x3 = 42.024, y3 = -56.189, z3 = 193.815;*/
+
+	float x1 = 0, y1 = 0, z1 = 0;
+	float x2 = 0, y2 = 1, z2 = 1;
+	float x3 = 0, y3 = 2, z3 = 2;
 
 	TranslationParameter selectedRS;
-	selectedRS = CalculateGeoTranslation(x1, y1, z1, x2, y2, z2, x3, y3, z3, 3);
-	cout << "Point 2 is in: " << selectedRS.p2.x << "\t" << selectedRS.p2.y << "\t" << selectedRS.p2.z << "\n";
-	cout << "Point 3 is in: " << selectedRS.p3.x << "\t" << selectedRS.p3.y << "\t" << selectedRS.p3.z << "\n";
+	selectedRS = CalculateGeoTranslation(x3, y3, z3, x1, y1, z1, x2, y2, z2, 2);
+	cout << "Selected three points to create the model are: (3,1,2)\n";
+	
+	if (selectedRS.Rx != 1000)
+	{
+		cout << "Point 2 is in: " << selectedRS.p2.x << "\t" << selectedRS.p2.y << "\t" << selectedRS.p2.z << "\n";
+		cout << "Point 3 is in: " << selectedRS.p3.x << "\t" << selectedRS.p3.y << "\t" << selectedRS.p3.z << "\n";
+	}
 
-	Point p;
-	p.x = -6.021, p.y = 35.657, p.z = 8.563;
-	p = CalculateNewPoint(selectedRS, p, 3);
+	//Point p;
+	//p.x = -6.021, p.y = 35.657, p.z = 8.563;
+	//p = CalculateNewPoint(selectedRS, p, 3);
 
-	cout << "Point 1 is in: " << p.x << "\t" << p.y << "\t" << p.z << "\n";
+	//cout << "Point 1 is in: " << p.x << "\t" << p.y << "\t" << p.z << "\n";
+	
 
 }
 

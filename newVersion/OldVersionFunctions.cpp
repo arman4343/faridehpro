@@ -2684,3 +2684,455 @@ void LoadHashTableFromFile(ifstream &clustersFile, int clusterNumber, unordered_
 	fp.close();
 	}*/
 }
+
+
+//********************************************************************************
+/*
+This process randomly selects a seed fragment as a new cluster and finds,
+in a parallel manner, the similar fragments to the seed. It continues till
+all the fragments are assigned to a cluster. It reads the whole fragments
+file to the RAM.
+This version has less rotations (1,2,3 and 3,2,1).
+*/
+
+int ClusterFragments_v2_Parallel(int fragmentLength, int numberOfFragments, int overlappingResidues, int expectedMatchedPoints, int binSize, int minNumberOfClusterMembers)
+{
+
+	int numberOfClusters = 0;
+	int numberOfSimilarFragments = 0;
+	string *lines;
+	lines = new string[fragmentLength];
+	string similarFragments, line;
+	int seedFragmentNumber;
+	//char rd_buffer[85];
+
+	unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> seedHashTable;
+	//unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> nonSeedHashTable;
+	vector <int> unclusteredFragments;	//A vector of fragments which are all unclustered yet
+	vector <int> remainedUnclustered;
+
+	FILE * fragmentsFile;
+	long fragmentsFileSize;
+	long readsize = 0;
+	char *fragmentsBuffer;
+	ofstream clusteringFile;
+	fstream unclusteredFragmentsFile;
+	string dataPath = "NonContinuous_Fragments_Results\\";
+
+
+	//Reads the unclustered fragments file or creates it if doesn't exist
+	try
+	{
+		unclusteredFragmentsFile.open((rootDir + dataPath + "Less_Rotations_Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "UnclusteredFragments.txt").c_str(), fstream::in | fstream::out | fstream::app);
+		if (unclusteredFragmentsFile.fail())	//If the file doesn't exist it means that it is the first run do we create the list including all fragments
+		{
+			cout << "\nError creting or reading the unclustered fragments file.";
+			return -1;
+		}
+	}
+	catch (std::ifstream::failure &FileExcep)
+	{
+		cout << FileExcep.what() << endl;
+		return -1;
+	}
+	catch (...)
+	{
+		cout << "\nOther exception thrown." << endl;
+		return -1;
+	}
+
+
+	//Reads the fragments file
+	try
+	{
+		fragmentsFile = fopen((rootDir + "Protein_Fragments" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + slash + "fragments.txt").c_str(), "r");
+		if (fragmentsFile == NULL)
+		{
+			cout << "\nError reading the fragments file.";
+			return -1;
+		}
+		//Read the file to RAM
+		else
+		{
+			fseek(fragmentsFile, 0, SEEK_END);
+			fragmentsFileSize = ftell(fragmentsFile);
+			fragmentsBuffer = (char *)malloc(fragmentsFileSize + 1);
+			fseek(fragmentsFile, 0, SEEK_SET);
+			readsize = fread(fragmentsBuffer, 1, fragmentsFileSize, fragmentsFile);
+			fclose(fragmentsFile);
+			if (readsize != fragmentsFileSize)
+			{
+				cout << "\nError reading the all of fragments file.";
+				return -1;
+			}
+		}
+	}
+	catch (std::ifstream::failure &FileExcep)
+	{
+		cout << FileExcep.what() << endl;
+		return -1;
+	}
+	catch (...)
+	{
+		cout << "\nOther exception thrown." << endl;
+		return -1;
+	}
+
+
+
+	//Reads the clustering information file or creates it if doesn't exist
+	try
+	{
+		clusteringFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "ClusteringLog.txt"), ios::out | ios::app);
+		if (clusteringFile.fail())
+		{
+			cout << "\nError creating the clustering information file.";
+			return -1;
+		}
+	}
+	catch (std::ifstream::failure &FileExcep)
+	{
+		cout << FileExcep.what() << endl;
+		return -1;
+	}
+	catch (...)
+	{
+		cout << "\nOther exception thrown." << endl;
+		return -1;
+	}
+
+
+
+	if (unclusteredFragmentsFile.peek() == EOF)	//if the file is empty, so it is the first run and all fragments are not clustered yet
+	{
+
+		for (int i = 0; i < numberOfFragments; i++)
+		{
+			unclusteredFragments.push_back(i);
+			//unclusteredFragmentsFile << i << "\t";
+		}
+	}
+	else
+	{
+
+		while (getline(unclusteredFragmentsFile, line));	//Read till the last line which has the updated unclustered fragments list	
+		stringstream stream(line);
+		string temp;
+
+		stream >> temp;
+		stream >> temp;
+		int fragmentNum;
+		while (stream >> fragmentNum)
+		{
+			unclusteredFragments.push_back(fragmentNum);
+			//cout << fragmentNum;
+			//getchar();
+		}
+		unclusteredFragmentsFile << "\n";
+	}
+
+	unclusteredFragmentsFile.close();
+
+
+
+	srand((unsigned int)time(NULL));
+	char *lOprationPosition;
+
+	//Clustering the fragments
+	while (unclusteredFragments.size() > 0)
+	{
+		int seed = rand() % unclusteredFragments.size();	//Randomly select one fragment to be the seed
+															//seed = 743643;
+		seedFragmentNumber = unclusteredFragments[seed];
+		cout << "\nSeed fragment: " << seedFragmentNumber << "\t";
+		//cout << "\nunclusteredFragments.size: " << unclusteredFragments.size() << "\n";
+		similarFragments = " ";
+		numberOfSimilarFragments = 0;
+
+		unclusteredFragments.erase(unclusteredFragments.begin() + seed);
+
+		int positionInFile = seedFragmentNumber * (fragmentLength * 85);
+		//cout << "\nPosition in File: " << positionInFile;
+		lOprationPosition = fragmentsBuffer + positionInFile;
+		for (int index = 0; index < fragmentLength; index++)
+		{
+			lines[index].assign(lOprationPosition, lOprationPosition + 85);
+			lOprationPosition += 85;
+		}
+
+		seedHashTable.clear();
+
+		//Select three consecutive points as Reference Set (RS) and create the hashtable
+		for (int c = 0; c < fragmentLength - 2; c++)
+			/*for (int i = c; i < c + 3; i++)
+			for (int j = c; j < c + 3; j++)
+			for (int k = c; k < c + 3; k++)
+			if (i != j && i != k && j != k)	//three different points to create RS*/
+		{
+			int i = c;
+			int j = c + 1;
+			int k = c + 2;
+			float x1 = (float)atof(lines[i].substr(30, 8).c_str());
+			float y1 = (float)atof(lines[i].substr(38, 8).c_str());
+			float z1 = (float)atof(lines[i].substr(46, 8).c_str());
+
+
+			float x2 = (float)atof(lines[j].substr(30, 8).c_str());
+			float y2 = (float)atof(lines[j].substr(38, 8).c_str());
+			float z2 = (float)atof(lines[j].substr(46, 8).c_str());
+
+			float x3 = (float)atof(lines[k].substr(30, 8).c_str());
+			float y3 = (float)atof(lines[k].substr(38, 8).c_str());
+			float z3 = (float)atof(lines[k].substr(46, 8).c_str());
+
+			TranslationParameter selectedRS;
+			selectedRS = CalculateGeoTranslation(x1, y1, z1, x2, y2, z2, x3, y3, z3, binSize);
+
+
+			if (selectedRS.Rx != 0 || selectedRS.Ry != 0 || selectedRS.Rz != 0)
+			{
+				//Add the second and third points of RS to the hash table
+				AddToHashTable(seedHashTable, selectedRS.p2, i + 1, j + 1, k + 1);
+				AddToHashTable(seedHashTable, selectedRS.p3, i + 1, j + 1, k + 1);
+
+				//Add non-RS points of the fragment to the hash table
+				for (int f = 0; f < fragmentLength; f++)
+				{
+					if (f != i && f != j && f != k)
+					{
+						Point p;
+						p.x = (float)atof(lines[f].substr(30, 8).c_str());
+						p.y = (float)atof(lines[f].substr(38, 8).c_str());
+						p.z = (float)atof(lines[f].substr(46, 8).c_str());
+						p = CalculateNewPoint(selectedRS, p, binSize);
+						AddToHashTable(seedHashTable, p, i + 1, j + 1, k + 1);
+					}
+				}
+			}
+
+			x1 = (float)atof(lines[k].substr(30, 8).c_str());
+			y1 = (float)atof(lines[k].substr(38, 8).c_str());
+			z1 = (float)atof(lines[k].substr(46, 8).c_str());
+
+			x2 = (float)atof(lines[j].substr(30, 8).c_str());
+			y2 = (float)atof(lines[j].substr(38, 8).c_str());
+			z2 = (float)atof(lines[j].substr(46, 8).c_str());
+
+			x3 = (float)atof(lines[i].substr(30, 8).c_str());
+			y3 = (float)atof(lines[i].substr(38, 8).c_str());
+			z3 = (float)atof(lines[i].substr(46, 8).c_str());
+
+			//TranslationParameter selectedRS;
+			selectedRS = CalculateGeoTranslation(x1, y1, z1, x2, y2, z2, x3, y3, z3, binSize);
+
+
+			if (selectedRS.Rx != 0 || selectedRS.Ry != 0 || selectedRS.Rz != 0)
+			{
+				//Add the second and third points of RS to the hash table
+				AddToHashTable(seedHashTable, selectedRS.p2, i + 1, j + 1, k + 1);
+				AddToHashTable(seedHashTable, selectedRS.p3, i + 1, j + 1, k + 1);
+
+				//Add non-RS points of the fragment to the hash table
+				for (int f = 0; f < fragmentLength; f++)
+				{
+					if (f != i && f != j && f != k)
+					{
+						Point p;
+						p.x = (float)atof(lines[f].substr(30, 8).c_str());
+						p.y = (float)atof(lines[f].substr(38, 8).c_str());
+						p.z = (float)atof(lines[f].substr(46, 8).c_str());
+						p = CalculateNewPoint(selectedRS, p, binSize);
+						AddToHashTable(seedHashTable, p, i + 1, j + 1, k + 1);
+					}
+				}
+			}
+		}
+
+
+
+		//Compare the seed hashtable with all other unclustered fragments hashtables
+
+		int fragmentNoGlobal = 0;
+		time_t t = time(0);
+
+#pragma omp parallel //num_threads(16)
+		{
+			//private variabales
+			int fragmentNo = 0;
+			unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> nonSeedHashTable2;
+			int index2;
+			bool matched2;
+			int c2, i2, j2, k2, f2;
+			char *lOprationPosition2;
+			string *lines2;
+			lines2 = new string[fragmentLength];
+			int quit = 0;
+
+			while (true)
+			{
+				//Set the fragmentNo in critical section
+#pragma omp critical
+				{
+					//printf(" world(%d) \n", omp_get_num_threads());
+
+					fragmentNo = fragmentNoGlobal;
+					fragmentNoGlobal++;
+					if (time(0) - t > 1)
+					{
+						cout << "unclusteredFragments.size: " << unclusteredFragments.size() << "\n" << "fragmentNo" << fragmentNo << "\n";
+						t = time(0);
+					}
+				}
+
+
+				if (fragmentNo >= (int)unclusteredFragments.size())
+				{
+					break;
+				}
+
+				int positionInFile2 = unclusteredFragments[fragmentNo] * (fragmentLength * 85);
+				//cout << endl << "Fragment no: " << unclusteredFragments[fragmentNo] << "\tPosition in file: " << positionInFile;
+				lOprationPosition2 = fragmentsBuffer + positionInFile2;
+				for (index2 = 0; index2 < fragmentLength; index2++)
+				{
+					lines2[index2].assign(lOprationPosition2, lOprationPosition2 + 85);
+					lOprationPosition2 += 85;
+				}
+
+
+				matched2 = false;	//if the fragment hashtable and seed hash table matches
+				for (c2 = 0; c2 < fragmentLength - 2; c2++)	// we select three consecutive points as Reference Set (RS)
+				{
+
+					i2 = c2;
+					j2 = c2 + 1;
+					k2 = c2 + 2;
+
+					nonSeedHashTable2.clear();
+
+					float x1Private = (float)atof(lines2[i2].substr(30, 8).c_str());
+					float y1Private = (float)atof(lines2[i2].substr(38, 8).c_str());
+					float z1Private = (float)atof(lines2[i2].substr(46, 8).c_str());
+
+					float x2Private = (float)atof(lines2[j2].substr(30, 8).c_str());
+					float y2Private = (float)atof(lines2[j2].substr(38, 8).c_str());
+					float z2Private = (float)atof(lines2[j2].substr(46, 8).c_str());
+
+					float x3Private = (float)atof(lines2[k2].substr(30, 8).c_str());
+					float y3Private = (float)atof(lines2[k2].substr(38, 8).c_str());
+					float z3Private = (float)atof(lines2[k2].substr(46, 8).c_str());
+
+					TranslationParameter selectedRS;
+					selectedRS = CalculateGeoTranslation(x1Private, y1Private, z1Private, x2Private, y2Private, z2Private, x3Private, y3Private, z3Private, binSize);
+
+					if (selectedRS.Rx != 0 || selectedRS.Ry != 0 || selectedRS.Rz != 0)
+					{
+						AddToHashTable(nonSeedHashTable2, selectedRS.p2, i2 + 1, j2 + 1, k2 + 1);
+						AddToHashTable(nonSeedHashTable2, selectedRS.p3, i2 + 1, j2 + 1, k2 + 1);
+
+						for (f2 = 0; f2 < fragmentLength; f2++)
+						{
+							if (f2 != i2 && f2 != j2 && f2 != k2)
+							{
+								Point p;
+								p.x = (float)atof(lines2[f2].substr(30, 8).c_str());
+								p.y = (float)atof(lines2[f2].substr(38, 8).c_str());
+								p.z = (float)atof(lines2[f2].substr(46, 8).c_str());
+								p = CalculateNewPoint(selectedRS, p, binSize);
+								AddToHashTable(nonSeedHashTable2, p, i2 + 1, j2 + 1, k2 + 1);
+							}
+						}
+
+						//compares two hash tables
+						matched2 = CompareTwoHashTables(seedHashTable, nonSeedHashTable2, expectedMatchedPoints);
+						if (matched2) // if the seed fragment and the new one are similar
+							break;
+					}
+
+					nonSeedHashTable2.clear();
+
+					x1Private = (float)atof(lines2[k2].substr(30, 8).c_str());
+					y1Private = (float)atof(lines2[k2].substr(38, 8).c_str());
+					z1Private = (float)atof(lines2[k2].substr(46, 8).c_str());
+
+					x2Private = (float)atof(lines2[j2].substr(30, 8).c_str());
+					y2Private = (float)atof(lines2[j2].substr(38, 8).c_str());
+					z2Private = (float)atof(lines2[j2].substr(46, 8).c_str());
+
+					x3Private = (float)atof(lines2[i2].substr(30, 8).c_str());
+					y3Private = (float)atof(lines2[i2].substr(38, 8).c_str());
+					z3Private = (float)atof(lines2[i2].substr(46, 8).c_str());
+
+					//selectedRS;
+					selectedRS = CalculateGeoTranslation(x1Private, y1Private, z1Private, x2Private, y2Private, z2Private, x3Private, y3Private, z3Private, binSize);
+
+					if (selectedRS.Rx != 0 || selectedRS.Ry != 0 || selectedRS.Rz != 0)
+					{
+						AddToHashTable(nonSeedHashTable2, selectedRS.p2, i2 + 1, j2 + 1, k2 + 1);
+						AddToHashTable(nonSeedHashTable2, selectedRS.p3, i2 + 1, j2 + 1, k2 + 1);
+
+						for (f2 = 0; f2 < fragmentLength; f2++)
+						{
+							if (f2 != i2 && f2 != j2 && f2 != k2)
+							{
+								Point p;
+								p.x = (float)atof(lines2[f2].substr(30, 8).c_str());
+								p.y = (float)atof(lines2[f2].substr(38, 8).c_str());
+								p.z = (float)atof(lines2[f2].substr(46, 8).c_str());
+								p = CalculateNewPoint(selectedRS, p, binSize);
+								AddToHashTable(nonSeedHashTable2, p, i2 + 1, j2 + 1, k2 + 1);
+							}
+						}
+
+						//compares two hash tables
+						matched2 = CompareTwoHashTables(seedHashTable, nonSeedHashTable2, expectedMatchedPoints);
+						if (matched2) // if the seed fragment and the new one are similar
+							break;
+					}
+				}
+
+#pragma omp critical
+				{
+					if (matched2)
+					{
+						numberOfSimilarFragments++;
+						similarFragments += to_string(unclusteredFragments[fragmentNo]) + "\t";
+						//cout << "\n" << similarFragments;
+					}
+					else
+					{
+						remainedUnclustered.push_back(unclusteredFragments[fragmentNo]);
+					}
+				}
+			}
+		}
+
+		cout << "Number of cluster members: " << numberOfSimilarFragments + 1;
+
+		unclusteredFragments.clear();
+		unclusteredFragments = remainedUnclustered;
+		remainedUnclustered.clear();
+
+		unclusteredFragmentsFile.open((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "UnclusteredFragments.txt").c_str(), fstream::out | fstream::app);
+		unclusteredFragmentsFile << "SeedFragment:" << seedFragmentNumber << "\t NumberOfUnclusteredFragments:" << unclusteredFragments.size();
+		for (int i = 0; i < (int)unclusteredFragments.size(); i++)	//Writes the unclustered fragments to file
+			unclusteredFragmentsFile << "\t" << unclusteredFragments[i];
+		unclusteredFragmentsFile << "\n";
+		unclusteredFragmentsFile.close();
+
+
+		if (numberOfSimilarFragments + 1 >= minNumberOfClusterMembers)
+		{
+			clusteringFile << "\nCluster_" << ++numberOfClusters << "\t" << seedFragmentNumber << "\t" << similarFragments;
+			int res = WriteHashTableToFile((rootDir + "Clustering_Results" + slash + "FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + slash + "Clusters.txt").c_str(), numberOfClusters, seedHashTable);
+			if (res == -1)
+				break;
+		}
+	}
+
+	clusteringFile.close();
+	cout << "\nNumber of clusters: " << numberOfClusters;
+	return numberOfClusters;
+
+}
+
