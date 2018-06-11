@@ -38,9 +38,9 @@ int main(void)
 		slash = "/";
 	#endif
 
-	int fragmentLength = 3;
-	int overlappingResidues = 2;
-	int	expectedMatchedPoints = 2; //one point in each fragment is always at 0, 0, 0 coordinate
+	int fragmentLength = 5;
+	int overlappingResidues = 4;
+	int	expectedMatchedPoints = 3; //one point in each fragment is always at 0, 0, 0 coordinate
 	int binSize = 2;	//used for clustering
 	//int includeRatio = 100;
 	int result = 0;
@@ -136,8 +136,8 @@ int main(void)
 	//numberOfClusters = ReadNumberOfClusters(fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
 	//result = CalculateCosineDistance(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, numberOfInterfaces, numberOfClusters);
 	
-	//list<int> fragmentNos = {466784, 25436, 1553023 };
-	//result = ExtractFragmentsInClusters(fragmentNos,fragmentLength, overlappingResidues);
+	list<int> fragmentNos = {1193, 48937, 66192};
+	result = ExtractFragmentsInClusters(fragmentNos,fragmentLength, overlappingResidues);
 
 	//--------------------------------------------------------------------------------
 

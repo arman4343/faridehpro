@@ -36,6 +36,9 @@
     <ClCompile Include="OldVersionFunctions.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="CompareProteinSubgraphsWithInterfaces.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="My_Functions.h">

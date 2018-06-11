@@ -273,7 +273,7 @@ int CreateProteinDescriptors_v2(string jobName, int fragmentLength, int overlapp
 //****************************************************************************************
 /*
 This process compares the descriptors of proteins in PRISM pair_list with interface descriptor vectors.
-The descriptors are compressed.
+The descriptors are compressed. Serial results can be processed.
 */
 
 int CompareProteinWithInterfaces_v1(int fragmentLength, int overlappingResidues, int binSize, int expectedMatchedPoints, int includeRatio)
@@ -543,7 +543,7 @@ int CompareProteinWithInterfaces_v1(int fragmentLength, int overlappingResidues,
 //****************************************************************************************
 /*
 This process compares the descriptors of proteins in PRISM pair_list with interface descriptor vectors.
-The descriptors are compressed.
+The descriptors are compressed. Parallel results can be processed.
 */
 
 int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues, int binSize, int expectedMatchedPoints, int includeRatio)

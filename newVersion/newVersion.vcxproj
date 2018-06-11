@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CalculateDistances.cpp" />
+    <ClCompile Include="CompareProteinSubgraphsWithInterfaces.cpp" />
     <ClCompile Include="CompareProteinSurfaceWithInterfaces.cpp" />
     <ClCompile Include="CreateInterfaceDescriptorVectorLibrary.cpp" />
     <ClCompile Include="CreateProteinFragmentLibrary.cpp" />

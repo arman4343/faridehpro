@@ -696,8 +696,10 @@ int WriteHashTableToFile(string fname, int numberOfClusters, unordered_map<float
 
 TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, int binSize)
 {
+
 	TranslationParameter res;
-	//define Ty1,Tz1,Tx1 to store rotation degrees
+
+	//define Ty1,Tz1,Tx1 to store transformation and rotation degrees
 	float Ty1 = 0, Tz1 = 0, Tx1 = 0;
 	float Ry1 = 0, Rz1 = 0, Rx1 = 0;
 	float degree = 0;
@@ -713,7 +715,7 @@ TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float
 		newy2 * newz3 == newy3 * newz2
 		)
 	{
-		cout << "Error: Three points are collinear." << endl;
+		cout << "\nError: Three points are collinear.";
 		res.Rx = 1000;
 		return res;
 	}
@@ -746,21 +748,27 @@ TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float
 
 	if (Ry1 != 0)
 	{
+
 		sint = sin(Ry1);
 		cost = cos(Ry1);
 		//cout << "sint : " << sint << " , cost : " << cost << endl;
+
 		tmpx = newx2*cost + newz2*sint;
 		tmpz = -1 * newx2 *sint + newz2 *cost;
-		newx2 = (float)((int)(tmpx * 10000 + .5) / 10000.0);
+
+		newx2 = (float)((int)(tmpx * 10000 + .5) / 10000.0);	//To round the number to 4 digits
 		newz2 = (float)((int)(tmpz * 10000 + .5) / 10000.0);
+
 		//newx2 = tmpx;
 		//newz2 = tmpz;
 		//cout << "After rotation newx2:" << newx2 << " ,newy2:" << newy2 << " ,newz2:" << newz2 << endl;
 
 		tmpx = newx3 * cost + newz3 * sint;
 		tmpz = -1 * newx3 *sint + newz3 *cost;
+
 		newx3 = (float)((int)(tmpx * 10000 + .5) / 10000.0);
 		newz3 = (float)((int)(tmpz * 10000 + .5) / 10000.0);
+
 		//newx2 = tmpx;
 		//newz2 = tmpz;
 		//cout << "After rotation newx3:" << newx3 << " ,newy3:" << newy3 << " ,newz3:" << newz3 << endl;
@@ -796,11 +804,14 @@ TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float
 
 	if (Rz1 != 0)
 	{
+
 		sint = sin(-1 * Rz1);
 		cost = cos(-1 * Rz1);
 		//cout << "sint : " << sint << " , cost : " << cost << endl;
+
 		tmpx = newx2*cost + -1 * newy2*sint;
 		tmpz = newx2 *sint + newy2 *cost;
+
 		newx2 = (float)((int)(tmpx * 10000 + .5) / 10000.0);
 		newy2 = (float)((int)(tmpz * 10000 + .5) / 10000.0);
 		//newx2 = tmpx;
@@ -809,8 +820,10 @@ TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float
 
 		tmpx = newx3 * cost + -1 * newy3 * sint;
 		tmpz = newx3 *sint + newy3 * cost;
+
 		newx3 = (float)((int)(tmpx * 10000 + .5) / 10000.0);
 		newy3 = (float)((int)(tmpz * 10000 + .5) / 10000.0);
+
 		//newx2 = tmpx;
 		//newz2 = tmpz;
 		//cout << "After rotation newx3:" << newx3 << " ,newy3:" << newy3 << " ,newz3:" << newz3 << endl;
@@ -851,8 +864,10 @@ TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float
 
 		tmpx = newy3 * cost + -1 * newz3 * sint;
 		tmpz = newy3 *sint + newz3 *cost;
+
 		newy3 = ((int)(tmpx * 10000 + .5) / 10000.0);
 		newz3 = ((int)(tmpz * 10000 + .5) / 10000.0);
+
 		//newx2 = tmpx;
 		//newz2 = tmpz;
 		//cout << "After rotation newx3:" << newx3 << " ,newy3:" << newy3 << " ,newz3:" << newz3 << endl;
@@ -867,22 +882,22 @@ TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float
 	res.Rz = Rz1;
 	res.Rx = Rx1;
 
-	/*res.p2.x = roundf(newx2 / binSize);
+	res.p2.x = roundf(newx2 / binSize);
 	res.p2.y = roundf(newy2 / binSize);
 	res.p2.z = roundf(newz2 / binSize);
 
 	res.p3.x = roundf(newx3 / binSize);
 	res.p3.y = roundf(newy3 / binSize);
-	res.p3.z = roundf(newz3 / binSize);*/
+	res.p3.z = roundf(newz3 / binSize);
 
 	//-0 problem in C++
-	res.p2.x = (newx2 <= 0 && newx2 > -0.5) ? 0 : roundf(newx2 / binSize);
+	/*res.p2.x = (newx2 <= 0 && newx2 > -0.5) ? 0 : roundf(newx2 / binSize);
 	res.p2.y = (newy2 <= 0 && newy2 > -0.5) ? 0 : roundf(newy2 / binSize);
 	res.p2.z = (newz2 <= 0 && newz2 > -0.5) ? 0 : roundf(newz2 / binSize);
 
 	res.p3.x = (newx3 <= 0 && newx3 > -0.5) ? 0 : roundf(newx3 / binSize);
 	res.p3.y = (newy3 <= 0 && newy3 > -0.5) ? 0 : roundf(newy3 / binSize);
-	res.p3.z = (newz3 <= 0 && newz3 > -0.5) ? 0 : roundf(newz3 / binSize);
+	res.p3.z = (newz3 <= 0 && newz3 > -0.5) ? 0 : roundf(newz3 / binSize);*/
 
 	return res;
 
@@ -892,6 +907,7 @@ TranslationParameter CalculateGeoTranslation(float x1, float y1, float z1, float
 /* This process calculates the new position for a point according to the Reference Set (RS) */
 Point CalculateNewPoint(TranslationParameter TP, Point P, int binSize)
 {
+
 	Point res = P;
 	float sint = 0, cost = 0;
 	float tmpx = 0, tmpy = 0, tmpz = 0;
@@ -900,6 +916,7 @@ Point CalculateNewPoint(TranslationParameter TP, Point P, int binSize)
 	res.y = res.y - TP.Transfer.y;
 	res.z = res.z - TP.Transfer.z;
 	//cout << "After Transfer X:" << res.x << " ,Y:" << res.y << " ,Z:" << res.z << endl;
+
 	sint = sin(TP.Ry);
 	cost = cos(TP.Ry);
 	tmpx = res.x*cost + res.z*sint;
@@ -907,6 +924,7 @@ Point CalculateNewPoint(TranslationParameter TP, Point P, int binSize)
 	res.x = ((int)(tmpx * 10000 + .5) / 10000.0);
 	res.z = ((int)(tmpz * 10000 + .5) / 10000.0);
 	//cout << "After Ry X:" << res.x << " ,Y:" << res.y << " ,Z:" << res.z << endl;
+
 	sint = sin(-1 * TP.Rz);
 	cost = cos(-1 * TP.Rz);
 	tmpx = res.x*cost + -1 * res.y*sint;
@@ -914,6 +932,7 @@ Point CalculateNewPoint(TranslationParameter TP, Point P, int binSize)
 	res.x = ((int)(tmpx * 10000 + .5) / 10000.0);
 	res.y = ((int)(tmpz * 10000 + .5) / 10000.0);
 	//cout << "After Rz X:" << res.x << " ,Y:" << res.y << " ,Z:" << res.z << endl;
+
 	sint = sin(-1 * TP.Rx);
 	cost = cos(-1 * TP.Rx);
 
@@ -922,10 +941,13 @@ Point CalculateNewPoint(TranslationParameter TP, Point P, int binSize)
 	res.y = ((int)(tmpx * 10000 + .5) / 10000.0);
 	res.z = ((int)(tmpz * 10000 + .5) / 10000.0);
 
+	res.x = roundf(res.x / binSize);
+	res.y = roundf(res.y / binSize);
+	res.z = roundf(res.z / binSize);
 
-	res.x = (res.x <= 0 && res.x > -0.5) ? 0 : roundf(res.x / binSize);
+	/*res.x = (res.x <= 0 && res.x > -0.5) ? 0 : roundf(res.x / binSize);
 	res.y = (res.y <= 0 && res.y > -0.5) ? 0 : roundf(res.y / binSize);
-	res.z = (res.z <= 0 && res.z > -0.5) ? 0 : roundf(res.z / binSize);
+	res.z = (res.z <= 0 && res.z > -0.5) ? 0 : roundf(res.z / binSize);*/
 	//cout << "X:" << res.x << " ,Y:" << res.y << " ,Z:" << res.z << endl;
 
 	return res;

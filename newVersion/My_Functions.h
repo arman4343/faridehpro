@@ -30,6 +30,7 @@ void AddToHashTable(std::unordered_map<float, std::unordered_map<float, std::uno
 bool CompareTwoHashTables(std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>, std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>, int);
 int WriteHashTableToFile(std::string, int, std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>);
 int CreateInterfaceDescriptors_v2_Parallel(int, int, int, int);
+int CompareProteinPairsWithInterfaces(std::string, int, int, int, int, int);
 
 
 
