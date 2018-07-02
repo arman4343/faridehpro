@@ -2614,7 +2614,7 @@ int CreateInterfaceDescriptors_v2(int fragmentLength, int overlappingResidues, i
 //****************************************************************************
 /* This process loads a hash table from a file */
 
-void LoadHashTableFromFile(ifstream &clustersFile, int clusterNumber, unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> &hashTable)
+/*void LoadHashTableFromFile(ifstream &clustersFile, int clusterNumber, unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> &hashTable)
 {
 
 	string line;
@@ -2682,9 +2682,9 @@ void LoadHashTableFromFile(ifstream &clustersFile, int clusterNumber, unordered_
 	}
 
 	fp.close();
-	}*/
+	}
 }
-
+*/
 
 //********************************************************************************
 /*
@@ -3136,3 +3136,272 @@ int ClusterFragments_v2_Parallel(int fragmentLength, int numberOfFragments, int 
 
 }
 
+//****************************************************************************************
+/*
+This process compares the descriptors of proteins in PRISM pair_list with interface descriptor vectors.
+The descriptors are compressed. Serial results can be processed.
+*/
+
+int CompareProteinWithInterfaces_v1(int fragmentLength, int overlappingResidues, int binSize, int expectedMatchedPoints, int includeRatio)
+{
+
+	std::map<int, int> proteinSurfaceDescriptor_1, proteinSurfaceDescriptor_2;
+	std::map<int, int> interfaceSideDescriptor_1, interfaceSideDescriptor_2;
+
+	int key, value;
+
+	string line, proteinName_1, proteinName_2, interfaceSideName_1 = "noname", interfaceSideName_2 = "noname";
+	ifstream pairList, interfaceDescriptorsLibrary;
+	ofstream interfacesSimilarToProteins;
+	vector <string> proteinList;
+	vector <string> potentialSimilarInterfaces;
+
+	//Read the target proteins pair list
+	try
+	{
+		pairList.open("D:\\PhD\\prism\\prism_standalone\\pair_list");
+
+		if (pairList.fail())
+		{
+			cout << "\nError reading the pair list file.";
+			return -1;
+		}
+	}
+	catch (std::ifstream::failure &FileExcep)
+	{
+		cout << FileExcep.what() << endl;
+		return -1;
+	}
+	catch (...)
+	{
+		cout << "\nOther exception thrown." << endl;
+		return -1;
+	}
+
+
+	//Create the output file to put interfaces similar to the proteins there	
+	try
+	{
+		interfacesSimilarToProteins.open("D:\\PhD\\My_Thesis\\Second_Step\\Data\\Filtering_Results\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "\\" + to_string(includeRatio) + "%InterfacesSimilarToProteinPairs.txt");
+
+		if (interfacesSimilarToProteins.fail())
+		{
+			cout << "\nError creating the output file.";
+			return -1;
+		}
+	}
+	catch (std::ifstream::failure &FileExcep)
+	{
+		cout << FileExcep.what() << endl;
+		return -1;
+	}
+	catch (...)
+	{
+		cout << "\nOther exception thrown." << endl;
+		return -1;
+	}
+
+
+	//Reads the interface descriptors library file
+	try
+	{
+		interfaceDescriptorsLibrary.open("D:\\PhD\\My_Thesis\\Second_Step\\Data\\PRISM_Interface_Descriptors\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "\\PrismInterfaceDescriptors.txt"); //All PRISM interface descriptors
+
+		if (interfaceDescriptorsLibrary.fail())
+		{
+			cout << "\nError reading the interface descriptors library file.";
+			return -1;
+		}
+	}
+	catch (std::ifstream::failure &FileExcep)
+	{
+		cout << FileExcep.what() << endl;
+		return -1;
+	}
+	catch (...)
+	{
+		cout << "\nOther exception thrown." << endl;
+		return -1;
+	}
+
+
+
+	while (getline(pairList, line))	//each line has two protein names
+	{
+		int spac = line.find(" ", 0);
+
+		proteinName_1 = line.substr(0, spac);
+		cout << "\n" << proteinName_1;
+
+		proteinName_2 = line.substr(spac + 1, line.length());
+		cout << " - " << proteinName_2;
+
+
+		ifstream proteinDescriptorFile_1("D:\\PhD\\My_Thesis\\Second_Step\\Data\\Protein_Descriptor_Vectors\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "\\" + proteinName_1 + "DescriptorVector.txt");
+		ifstream proteinDescriptorFile_2("D:\\PhD\\My_Thesis\\Second_Step\\Data\\Protein_Descriptor_Vectors\\FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "\\" + proteinName_2 + "DescriptorVector.txt");
+		if (proteinDescriptorFile_1 && proteinDescriptorFile_2)
+		{
+
+			interfacesSimilarToProteins << "Interfaces similar to " << proteinName_1 << "-" << proteinName_2 << ":\n";
+
+			proteinSurfaceDescriptor_1.clear();
+			proteinSurfaceDescriptor_2.clear();
+
+			//Load protein_1 surface descriptor from file
+			getline(proteinDescriptorFile_1, line);
+			int length = line.length();
+			int commaPos = -1;
+
+			while (commaPos < length - 1)
+			{
+				key = stoi(line.substr(commaPos + 1, line.find(":", commaPos + 1)));
+				value = stoi(line.substr(line.find(":", commaPos + 1) + 1, line.find(",", commaPos + 1)));
+				//cout << "\nKey: " << key << "\tValue: " << value;
+				proteinSurfaceDescriptor_1[key] = value;
+				commaPos = line.find(",", commaPos + 1);
+			}
+
+
+			//Load protein_2 surface descriptor from file
+			getline(proteinDescriptorFile_2, line);
+			length = line.length();
+			commaPos = -1;
+
+			while (commaPos < length - 1)
+			{
+				key = stoi(line.substr(commaPos + 1, line.find(":", commaPos + 1)));
+				value = stoi(line.substr(line.find(":", commaPos + 1) + 1, line.find(",", commaPos + 1)));
+				//cout << "\nKey: " << key << "\tValue: " << value;
+				proteinSurfaceDescriptor_2[key] = value;
+				commaPos = line.find(",", commaPos + 1);
+			}
+
+
+
+			//Compare each protein pair with all interfaces
+			int lineNumber = 0;
+			bool side1Existence = false;
+
+			while (getline(interfaceDescriptorsLibrary, line)) //each line has an interface descriptor
+			{
+
+				//lineNumber++;
+
+				//if (lineNumber % 2 != 0)	//Read side 1 of the interface
+				if (interfaceSideName_1 == "noname")
+				{
+
+					length = line.length();
+
+					if (length > 13)
+					{
+
+						side1Existence = true;
+						interfaceSideDescriptor_1.clear();
+						interfaceSideName_1 = line.substr(0, 12);
+						//cout << "\n" << "interfaceSideName_1: " << interfaceSideName_1;
+						//getchar();
+
+						commaPos = 12;
+
+						while (commaPos < length - 1)	//Load interface descriptor from file
+						{
+							key = stoi(line.substr(commaPos + 1, line.find(":", commaPos + 1)));
+							value = stoi(line.substr(line.find(":", commaPos + 1) + 1, line.find(",", commaPos + 1)));
+							//cout << "\nKey: " << key << "\tValue: " << value;
+							interfaceSideDescriptor_1[key] = value;
+							commaPos = line.find(",", commaPos + 1);
+						}
+
+					}
+					else
+						side1Existence = false;
+
+					//getchar();
+				}
+
+				else if (interfaceSideName_2 == "noname") //Read side 2 of the interface and do the comparisons
+				{
+
+					length = line.length();
+
+					if (length > 13 && side1Existence)
+					{
+
+						interfaceSideName_2 = line.substr(0, 12);
+						//cout << "\n" << "interfaceSideName_2: " << interfaceSideName_2;
+						//getchar();
+
+
+						if (interfaceSideName_1.substr(0, 6) == interfaceSideName_2.substr(0, 6))
+						{
+
+							interfaceSideDescriptor_2.clear();
+							commaPos = 12;
+
+							while (commaPos < length - 1)	//Load interface descriptor from file
+							{
+								key = stoi(line.substr(commaPos + 1, line.find(":", commaPos + 1)));
+								value = stoi(line.substr(line.find(":", commaPos + 1) + 1, line.find(",", commaPos + 1)));
+								//cout << "\nKey: " << key << "\tValue: " << value;
+								interfaceSideDescriptor_2[key] = value;
+								commaPos = line.find(",", commaPos + 1);
+							}
+							//getchar();
+
+
+							bool interfaceSurfaceSimilarity = CompareProteinSurfaceWithInterfaceSide(proteinSurfaceDescriptor_1, interfaceSideDescriptor_1, (float)includeRatio);
+							//cout << endl << interfaceSurfaceSimilarity;
+							if (interfaceSurfaceSimilarity)
+							{
+								//cout << endl << "Prtein A is similar to interface side 1.";
+								interfaceSurfaceSimilarity = CompareProteinSurfaceWithInterfaceSide(proteinSurfaceDescriptor_2, interfaceSideDescriptor_2, (float)includeRatio);
+								if (interfaceSurfaceSimilarity)
+								{
+									interfacesSimilarToProteins << interfaceSideName_1.substr(0, 6) << "\n";
+									//cout << endl << "Prtein B is similar to interface side 2.";
+								}
+							}
+
+							//else
+							if (!interfaceSurfaceSimilarity)
+							{
+								interfaceSurfaceSimilarity = CompareProteinSurfaceWithInterfaceSide(proteinSurfaceDescriptor_1, interfaceSideDescriptor_2, (float)includeRatio);
+								if (interfaceSurfaceSimilarity)
+								{
+									//cout << endl << "Prtein A is similar to interface side 2.";
+									interfaceSurfaceSimilarity = CompareProteinSurfaceWithInterfaceSide(proteinSurfaceDescriptor_2, interfaceSideDescriptor_1, (float)includeRatio);
+									if (interfaceSurfaceSimilarity)
+									{
+										interfacesSimilarToProteins << interfaceSideName_1.substr(0, 6) << "\n";
+										//cout << endl << "Prtein B is similar to interface side 1.";
+									}
+								}
+							}
+							//cout << endl << interfaceSurfaceSimilarity;
+							//getchar();
+							interfaceSideName_1 = "noname";
+						}
+						else
+							interfaceSideName_1 = interfaceSideName_2;
+
+						interfaceSideName_2 = "noname";
+
+					}
+
+				}
+			}
+
+			interfaceDescriptorsLibrary.clear();
+			interfaceDescriptorsLibrary.seekg(0, ios::beg);
+
+		}
+		else
+			cout << "\nError reading the protein surface descriptor file for protein: " + proteinName_1 + "or " + proteinName_2;
+	}
+
+	interfacesSimilarToProteins.close();
+	pairList.close();
+	interfaceDescriptorsLibrary.close();
+	return 0;
+}

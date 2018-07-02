@@ -38,11 +38,11 @@ int main(void)
 		slash = "/";
 	#endif
 
-	int fragmentLength = 5;
-	int overlappingResidues = 4;
+	int fragmentLength = 4;
+	int overlappingResidues = 3;
 	int	expectedMatchedPoints = 3; //one point in each fragment is always at 0, 0, 0 coordinate
 	int binSize = 2;	//used for clustering
-	//int includeRatio = 100;
+	int includeRatio = 100;
 	int result = 0;
 	int minNumberOfClusterMembers = 5;
 	int numberOfClusters, numberOfFragments;
@@ -61,7 +61,7 @@ int main(void)
 	cout << "\nElapsed time: " << to_string(difftime(endTime, startTime));
 	*/
 		
-	//----------------------------Cluster the fragments--------------------------------
+	//----------------------------Cluster the fragments----------------------------------------------------------------
 
 	/*
 	time_t startTime = time(0);
@@ -136,8 +136,8 @@ int main(void)
 	//numberOfClusters = ReadNumberOfClusters(fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
 	//result = CalculateCosineDistance(fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, numberOfInterfaces, numberOfClusters);
 	
-	list<int> fragmentNos = {1193, 48937, 66192};
-	result = ExtractFragmentsInClusters(fragmentNos,fragmentLength, overlappingResidues);
+	//list<int> fragmentNos = {1193, 48937, 66192};
+	//result = ExtractFragmentsInClusters(fragmentNos,fragmentLength, overlappingResidues);
 
 	//--------------------------------------------------------------------------------
 

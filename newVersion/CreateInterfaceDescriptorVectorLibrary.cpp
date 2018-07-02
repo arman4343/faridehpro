@@ -173,7 +173,7 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 			//PrintHashTable(fHashTable);
 			//getchar();
 		}
-		cout << "fragmentHashTables size: " << fragmentHashTables.size();
+		//cout << "\nfragmentHashTables size: " << fragmentHashTables.size();
 	}
 	catch (std::ifstream::failure &FileExcep)
 	{
@@ -301,7 +301,7 @@ int CreateInterfaceDescriptors_v2_Parallel(int fragmentLength, int overlappingRe
 													TranslationParameter selectedRS;
 													selectedRS = CalculateGeoTranslation(x1, y1, z1, x2, y2, z2, x3, y3, z3, binSize);
 
-													if (selectedRS.Rx != 1000 || selectedRS.Ry != 1000 || selectedRS.Rz != 1000)
+													if (selectedRS.Rx != 1000)
 													{
 														AddToHashTable(fragmentHashTable, selectedRS.p2, i + 1, j + 1, k + 1);
 														AddToHashTable(fragmentHashTable, selectedRS.p3, i + 1, j + 1, k + 1);
