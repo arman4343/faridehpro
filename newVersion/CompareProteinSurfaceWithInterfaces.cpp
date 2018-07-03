@@ -847,7 +847,7 @@ int CompareProteinWithInterfaces_v2(int fragmentLength, int overlappingResidues,
 }
 
 //----------------------------------------------------------------
-bool CompareProteinSurfaceWithInterfaceSide(std::map<int, int> proteinSurfaceDescriptor, std::map<int, int> interfaceSideDescriptor, float includeRatio)
+bool CompareProteinSurfaceWithInterfaceSide(map<int, int> proteinSurfaceDescriptor, std::map<int, int> interfaceSideDescriptor, float includeRatio)
 {
 
 
