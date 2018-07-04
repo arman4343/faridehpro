@@ -23,13 +23,6 @@ Written by Farideh Halakou
 #pragma warning(disable : 4503) 
 using namespace std;
 
-struct FragmentInfo
-{
-	int fragmentNo;
-	int clusterNo;
-	float fragmentCenter;
-};
-
 
 //****************************************************************************
 /*
@@ -37,15 +30,12 @@ This process ...
 
 */
 
-int CompareProteinPairsWithInterfaces(string jobName, int fragmentLength, int overlappingResidues, int expectedMatchedPoints, int binSize)
+int CompareProteinsWithInterfaces_v3(string jobName, int fragmentLength, int overlappingResidues, int expectedMatchedPoints, int binSize)
 {
-
-	//map<int, int> proteinSurfaceDescriptor;
 
 	vector <FragmentInfo> proteinSurfaceDescriptor;
 
 	string line, proteinName, interfaceSideName, interfaceDescriptorString;
-	int incrementValue = fragmentLength - overlappingResidues;
 	map <int, int> interfaceSideDescriptorMap;
 	map <string, map<int, int>> PrismInterfaceDescriptors;
 
@@ -175,7 +165,7 @@ int CompareProteinPairsWithInterfaces(string jobName, int fragmentLength, int ov
 
 
 	//Reads the interfaces list
-	try
+	/*try
 	{
 		interfacesListFile.open(rootDir + "InterfaceList.txt");
 
@@ -210,13 +200,13 @@ int CompareProteinPairsWithInterfaces(string jobName, int fragmentLength, int ov
 		cout << "\nOther exception thrown.";
 		return -1;
 	}
-
+	*/
 
 	//Create the output file to put interfaces similar to the proteins there	
 	try
 	{
 
-		interfacesSimilarToProteinsFile.open(rootDir + "Filtering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/" + "InterfacesSimilarToProteinPairs.txt");
+		interfacesSimilarToProteinsFile.open(rootDir + "Filtering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/" + "InterfacesSimilarToProteins.txt");
 
 		if (interfacesSimilarToProteinsFile.fail())
 		{
@@ -237,9 +227,9 @@ int CompareProteinPairsWithInterfaces(string jobName, int fragmentLength, int ov
 
 
 	//Reads the interface descriptors library file to PrismInterfaceDescriptors
-	try
+	/*try
 	{
-		interfaceDescriptorsLibraryFile.open(rootDir + "PRISM_Interface_Descriptors/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/PrismInterfaceDescriptors.txt"); //All PRISM interface descriptors
+		interfaceDescriptorsLibraryFile.open(rootDir + "PRISM_Interface_Descriptors/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/PrismInterfaceDescriptors.txt");
 
 		if (interfaceDescriptorsLibraryFile.fail())
 		{
@@ -299,7 +289,7 @@ int CompareProteinPairsWithInterfaces(string jobName, int fragmentLength, int ov
 		cout << "\nOther exception thrown." << endl;
 		return -1;
 	}
-
+	*/
 
 
 
@@ -307,37 +297,41 @@ int CompareProteinPairsWithInterfaces(string jobName, int fragmentLength, int ov
 	{
 
 		proteinName = proteinsList[proteinIndex];
+		cout << endl << proteinName;
 
 		ifstream proteinFile((prismPath + "jobs/" + jobName + "/surfaceExtract/" + proteinName + ".asa.pdb").c_str());	//read the protein surface file
 		if (proteinFile)
 		{
-			ifstream proteinDescriptorFile(rootDir + "Protein_Descriptor_Vectors/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/" + proteinName + "DescriptorVector.txt");
-			if (!proteinDescriptorFile)	//if the descriptor file of this protein doesn't exist
-			{
-
-				vector <string> surfaceResidueCoordinates;
-				int lineCounter = 0;
-				while (getline(proteinFile, line))	//read the lines of the protein file
-					if (line.find("ATOM") == 0)
-						surfaceResidueCoordinates.push_back(line);
-
-				proteinFile.close();
-
-				if ((int)surfaceResidueCoordinates.size() >= fragmentLength)
-				{
-					ofstream proteinDescriptorFile(rootDir + "Protein_Descriptor_Vectors/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/" + proteinName + "DescriptorVector.txt");
-
-					if (proteinDescriptorFile)
-						CreateProteinSurfaceGraph(proteinSurfaceDescriptor, surfaceResidueCoordinates, fragmentHashTables, fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
-					else
-						cout << "\nError creating the protein surface descriptor vector file " + proteinName;
-				}
-				else
-					cout << "\nProtein surface " + proteinName + "  is smaller than the fragment length.";
-			}
+			
+			vector <string> surfaceResidueCoordinates;
+			int lineCounter = 0;
+			while (getline(proteinFile, line))	//read the lines of the protein file
+				if (line.find("ATOM") == 0)
+					surfaceResidueCoordinates.push_back(line);
 
 			proteinFile.close();
-			proteinDescriptorFile.close();
+
+			if ((int)surfaceResidueCoordinates.size() >= fragmentLength)
+			{
+				ofstream proteinDescriptorFile(rootDir + "Protein_Descriptor_Vectors/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/" + proteinName + "_DescriptorVector.txt");
+
+				if (proteinDescriptorFile)
+				{
+
+					CreateProteinSurfaceGraph(proteinSurfaceDescriptor, surfaceResidueCoordinates, fragmentHashTables, fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
+					for (auto it1 = 0; it1 < proteinSurfaceDescriptor.size(); ++it1)
+						proteinDescriptorFile << proteinSurfaceDescriptor[it1].fragmentNo << ", " << proteinSurfaceDescriptor[it1].clusterNo << ", [" << proteinSurfaceDescriptor[it1].fragmentCenter.x << "," << proteinSurfaceDescriptor[it1].fragmentCenter.y << "," << proteinSurfaceDescriptor[it1].fragmentCenter.z << "]\n";
+		
+					proteinDescriptorFile.close();
+
+				}
+				else
+					cout << "\nError creating the protein surface descriptor vector file " + proteinName;
+			}
+			else
+				cout << "\nProtein surface " + proteinName + "  is smaller than the fragment length.";
+
+			proteinFile.close();
 		}
 		else
 			cout << "\nError reading the protein surface file " + proteinName;
@@ -353,11 +347,12 @@ This process extracts the continuous fragments from the protein surface and crea
 fragments based on the fagment center distances.
 */
 
-int CreateProteinSurfaceGraph(vector <FragmentInfo>& proteinSurfaceDescriptor, vector <string>& surfaceResidueCoordinates, vector<unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>>>& fragmentHashTables, int fragmentLength, int overlappingResidues, int expectedMatchedPoints, int binSize)
+void CreateProteinSurfaceGraph(vector <FragmentInfo>& proteinSurfaceDescriptor, vector <string>& surfaceResidueCoordinates, vector<unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>>>& fragmentHashTables, int fragmentLength, int overlappingResidues, int expectedMatchedPoints, int binSize)
 {
 
 	proteinSurfaceDescriptor.clear();
 	int fragmentNumber = 0;	//Fragment number on protein surface
+	int incrementValue = fragmentLength - overlappingResidues;
 
 	unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> fragmentHashTable;
 
@@ -385,14 +380,19 @@ int CreateProteinSurfaceGraph(vector <FragmentInfo>& proteinSurfaceDescriptor, v
 
 		if (continuousResidues == true)	//We made sure that it is a continuous fragment. Now we want to find which fragment in our fragment library is similar to this fragment.
 		{
-			fragmentNumber++;
+
+
+			//for (int temp = lineIndex1; temp < (lineIndex1 + fragmentLength); temp++)
+			//	cout << endl << surfaceResidueCoordinates[temp];
+			//getchar();
+
 			unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> clusterHashTable;
 			bool matched = false;
 			int scannedClusters = 1;
 
 			while (!matched && scannedClusters <= fragmentHashTables.size()) //till we find which cluster hash table is similar to the fragment hashtable or none of them are similar
 			{
-
+				
 				clusterHashTable.clear();
 				clusterHashTable = fragmentHashTables[scannedClusters - 1];
 
@@ -453,28 +453,36 @@ int CreateProteinSurfaceGraph(vector <FragmentInfo>& proteinSurfaceDescriptor, v
 					}// for i
 					if (matched) break;
 				}//for c
-
+				
 				if (matched)
 				{
-					proteinSurfaceDescriptor[fragmentNumber].clusterNo = scannedClusters;
-					//proteinSurfaceDescriptor[fragmentNumber].fragmentCenter = ;
+					
+					FragmentInfo fragInfo;
+
+					fragInfo.fragmentNo = fragmentNumber;
+					fragInfo.clusterNo = scannedClusters;
+
+					//Calculate fragment's center
+					float centerX = 0, centerY = 0, centerZ = 0;
+					for (int fragmentIterator = lineIndex1; fragmentIterator < (lineIndex1 + fragmentLength); fragmentIterator++)
+					{
+						centerX += (float)atof(surfaceResidueCoordinates[fragmentIterator].substr(30, 8).c_str());
+						centerY += (float)atof(surfaceResidueCoordinates[fragmentIterator].substr(38, 8).c_str());
+						centerZ += (float)atof(surfaceResidueCoordinates[fragmentIterator].substr(46, 8).c_str());
+					}
+
+					fragInfo.fragmentCenter.x = (float)centerX / fragmentLength;
+					fragInfo.fragmentCenter.y = (float)centerY / fragmentLength;
+					fragInfo.fragmentCenter.z = (float)centerZ / fragmentLength;
+
+					proteinSurfaceDescriptor.push_back(fragInfo);
 				}
-
-				/*if (proteinSurfaceDescriptor.find(scannedClusters) != proteinSurfaceDescriptor.end())	//found
-				proteinSurfaceDescriptor[scannedClusters]++;
-
-				else //not found
-				proteinSurfaceDescriptor[scannedClusters] = 1;*/
 
 				scannedClusters++;
 			}
+
+			fragmentNumber++;
 		}
 	}
-
-	for (auto it1 = proteinSurfaceDescriptor.begin(); it1 != proteinSurfaceDescriptor.end(); ++it1)
-		proteinDescriptorFile << it1->first << ":" << it1->second << ",";
-
-	proteinDescriptorFile << "\n";
-	proteinDescriptorFile.close();
 
 }

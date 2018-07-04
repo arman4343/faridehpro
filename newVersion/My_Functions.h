@@ -15,6 +15,14 @@ struct TranslationParameter {
 	Point p2, p3;
 };
 
+struct FragmentInfo
+{
+	int fragmentNo;
+	int clusterNo;
+	Point fragmentCenter;
+};
+
+
 extern std::string rootDir;
 extern std::string slash;
 
@@ -30,9 +38,8 @@ void AddToHashTable(std::unordered_map<float, std::unordered_map<float, std::uno
 bool CompareTwoHashTables(std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>, std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>, int);
 int WriteHashTableToFile(std::string, int, std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>);
 int CreateInterfaceDescriptors_v2_Parallel(int, int, int, int);
-int CompareProteinPairsWithInterfaces(std::string, int, int, int, int, int);
-
-
+int CompareProteinsWithInterfaces_v3(std::string, int, int, int, int);
+void CreateProteinSurfaceGraph(std::vector <FragmentInfo>&, std::vector <std::string>&, std::vector<std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>>&, int, int, int, int);
 
 int CreateProteinDescriptors(std::string, int, int, int, int, int);
 int CreateProteinDescriptors_v2(std::string, int, int, int, int, int);

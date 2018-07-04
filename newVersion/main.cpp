@@ -42,9 +42,9 @@ int main(void)
 	int overlappingResidues = 3;
 	int	expectedMatchedPoints = 3; //one point in each fragment is always at 0, 0, 0 coordinate
 	int binSize = 2;	//used for clustering
-	int includeRatio = 100;
+	//int includeRatio = 100;
 	int result = 0;
-	int minNumberOfClusterMembers = 5;
+	//int minNumberOfClusterMembers = 5;
 	int numberOfClusters, numberOfFragments;
 	//int numberOfInterfaces = 45222;
 
@@ -94,7 +94,7 @@ int main(void)
 	
 	//----------------------------Create the descriptive vectors for the protein surfaces--------------------------------
 	
-	/*
+	
 	// Running PRISM to extract the surfaces of the PDBs listed in the pair_list
 	string jobName = "prismJob_6Angstrome";
 	//string filename = "prism.py pair_list template_default " + jobName;
@@ -104,15 +104,16 @@ int main(void)
 
 	//Creating the descriptor vectors of the PDB surfaces
 	time_t startTime = time(0);
-	cout << "\nCreating descriptor vectors for proteins started at " << time(&startTime);
+	cout << "\nCreating descriptor vectors for proteins started...";
 
-	numberOfClusters = ReadNumberOfClusters(fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
-	result = CreateProteinDescriptors_v2(jobName, fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, numberOfClusters);
+	//numberOfClusters = ReadNumberOfClusters(fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
+	//result = CreateProteinDescriptors_v2(jobName, fragmentLength, overlappingResidues, binSize, expectedMatchedPoints, numberOfClusters);
+	result = CompareProteinsWithInterfaces_v3(jobName, fragmentLength, overlappingResidues, expectedMatchedPoints, binSize);
 
 	time_t endTime = time(0);
-	cout << "\nCreating descriptor vectors for proteins finished at " << time(&endTime);
+	cout << "\nCreating descriptor vectors for proteins finished.";
 	cout << "\nElapsed time: " << to_string(difftime(endTime, startTime));
-	*/
+	
 
 	//----------------------------Compare the protein descriptive vectors with interface descriptor vectors--------------------------------
 	
