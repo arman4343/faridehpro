@@ -26,7 +26,9 @@ using namespace std;
 
 //****************************************************************************
 /*
-This process ...
+This process creates a graph of protein surface for all the proteins in the target list. Then finds the 
+subgraphs in each protein graph and creates the descriptors of each subgraph. Then it compares the
+subgraphs' descriptors with interface descriptirs.
 
 */
 
