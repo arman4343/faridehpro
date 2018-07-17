@@ -18,6 +18,7 @@ Written by Farideh Halakou
 #include <unordered_map>
 #include <map>
 #include <ctype.h>
+#include <math.h>
 #include "My_Functions.h"
 
 
@@ -30,7 +31,7 @@ using namespace std;
 This process creates descriptor vectors for protein in PRISM pair_list from which the surfaces are extracted.
 It creates the descriptor vector as a map just showing the frequency of the existent fragments, not as a sparce vector.
 */
-int CreateProteinDescriptorAndCompare(string jobName, int numberOfResults, int fragmentLength, int overlappingResidues, int expectedMatchedPoints, int binSize)
+int CreateProteinDescriptorAndCompare(int topXresults, string similarityMetric, int fragmentLength, int overlappingResidues, int expectedMatchedPoints, int binSize)
 {
 
 	string line, proteinName, interfaceSideName, interfaceDescriptorString;
@@ -43,7 +44,6 @@ int CreateProteinDescriptorAndCompare(string jobName, int numberOfResults, int f
 	ifstream proteinsListFile, interfacesListFile, interfaceDescriptorsLibraryFile;
 	ofstream interfacesSimilarToProteinsFile;
 	vector <string> proteinsList, interfacesList;
-	string prismPath = "D:/PhD/prism/prism_standalone/";
 
 	FILE * clustersFile;
 	char * clustersBuffer;
@@ -52,15 +52,17 @@ int CreateProteinDescriptorAndCompare(string jobName, int numberOfResults, int f
 	vector<unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>>> fragmentHashTables;
 	unordered_map<float, unordered_map<float, unordered_map<float, vector <string>>>> fHashTable;
 
+	int numberOfResults = numberOfInterfaces * ((float)topXresults / 100);
+	cout << endl << numberOfResults;
 
 	//Read the target proteins list file
 	try
 	{
-		proteinsListFile.open(rootDir + "Target_Proteins_List.txt"); //list of target proteins
+		proteinsListFile.open(rootDir + "Piface_Test_List.txt"); //list of target proteins
 
 		if (proteinsListFile.fail())
 		{
-			cout << "\nError reading the pair list file.";
+			cout << "\nError reading the proteins list file.";
 			return -1;
 		}
 		else
@@ -186,7 +188,6 @@ int CreateProteinDescriptorAndCompare(string jobName, int numberOfResults, int f
 				line.end());
 
 				interfacesList.push_back(line);
-				//interfacesList.push_back(line.substr(0, line.size() - 1));	//linux version
 			}
 			interfacesListFile.close();
 		}
@@ -207,7 +208,7 @@ int CreateProteinDescriptorAndCompare(string jobName, int numberOfResults, int f
 	try
 	{
 
-		interfacesSimilarToProteinsFile.open(rootDir + "Filtering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/" + "InterfacesSimilarToProteins.txt");
+		interfacesSimilarToProteinsFile.open(rootDir + "Filtering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/Top" + to_string(topXresults) + "%_" + similarityMetric + "Based_Interfaces_Similar_To_Proteins.txt");
 
 		if (interfacesSimilarToProteinsFile.fail())
 		{
@@ -300,7 +301,7 @@ int CreateProteinDescriptorAndCompare(string jobName, int numberOfResults, int f
 		proteinName = proteinsList[proteinIndex];
 		cout << endl << proteinName;
 
-		ifstream proteinFile((prismPath + "jobs/" + jobName + "/surfaceExtract/" + proteinName + ".asa.pdb").c_str());	//read the protein surface file
+		ifstream proteinFile((rootDir + "surfaceExtract/" + proteinName + ".asa.pdb").c_str());	//read the protein surface file
 		if (proteinFile)
 		{
 
@@ -333,23 +334,38 @@ int CreateProteinDescriptorAndCompare(string jobName, int numberOfResults, int f
 					
 					interfaceSimilarities.clear();
 
+					//cout << "\nInterfaces list size: " << interfacesList.size();
 					for (int i = 0; i < interfacesList.size(); i++)
 					{
 
 						interfaceSideName = interfacesList[i];
-						
+						float similarityRate = 0;
+
 						if ((int)PrismInterfaceDescriptors[interfaceSideName].size() > 0)
 						{
-							float similarityRate = CompareProteinDescriptorWithInterfaceSideDescriptor(proteinSurfaceDescriptor, PrismInterfaceDescriptors[interfaceSideName]);
-							//interfaceSimilarities[similarityRate] = interfaceSideName;	
+							//cout << "Interface Name: " << interfaceSideName;
+							int numberOfClusters = fragmentHashTables.size();
+
+							similarityRate = CompareProteinDescriptorWithInterfaceSideDescriptor(proteinSurfaceDescriptor, PrismInterfaceDescriptors[interfaceSideName], numberOfClusters, similarityMetric);
 							interfaceSimilarities.insert(pair<float, string>(similarityRate, interfaceSideName));
+
 						}
 					}
 
+					
 					int resultsIndex = 0;
-					for (auto it1 = interfaceSimilarities.rbegin(); it1 != interfaceSimilarities.rend(); ++it1)
-						if (resultsIndex++ < numberOfResults)
-							interfacesSimilarToProteinsFile << it1->first << ":" << it1->second << endl;
+					
+					if (similarityMetric == "Euclidean")
+						for (auto it1 = interfaceSimilarities.begin(); it1 != interfaceSimilarities.end(); ++it1)
+							if (resultsIndex++ < numberOfResults)
+								interfacesSimilarToProteinsFile << it1->second << "\t" << it1->first << endl;
+
+					else if (similarityMetric == "Inclusion" || similarityMetric == "Cosine" || similarityMetric == "HistogramIntersection")
+						for (auto it1 = interfaceSimilarities.rbegin(); it1 != interfaceSimilarities.rend(); ++it1)
+							if (resultsIndex++ < numberOfResults)
+								interfacesSimilarToProteinsFile << it1->second << "\t" << it1->first << endl;
+
+					
 
 				}
 				else
@@ -494,65 +510,112 @@ void CreateProteinDescriptors_v3(map<int, int>& proteinSurfaceDescriptor, vector
 
 
 //****************************************************************************************
-float CompareProteinDescriptorWithInterfaceSideDescriptor(map<int, int> proteinSurfaceDescriptor, std::map<int, int> interfaceSideDescriptor)
+double CompareProteinDescriptorWithInterfaceSideDescriptor(map<int, int> proteinSurfaceDescriptor, map<int, int> interfaceSideDescriptor, int numberOfClusters, string similarityMetric)
 {
 
-	/*
-	cout << endl;
-	for (auto it1 = proteinSurfaceDescriptor.cbegin(); it1 != proteinSurfaceDescriptor.cend(); ++it1)
+	double interfaceSurfaceSimilarityRate = 0;
+
+	if (similarityMetric == "Inclusion")
 	{
-		cout << it1->first << " " << it1->second << " ";
-	}
-	//getchar();
 
-	cout << endl;
-	for (auto it1 = interfaceSideDescriptor.cbegin(); it1 != interfaceSideDescriptor.cend(); ++it1)
-	{
-		cout << it1->first << " " << it1->second << " ";
-	}
-	getchar();
-	*/
-
-
-	int includedFragmentsCount = 0;
-	int interfaceFragmentsCount = 0;
-	map<int, int>::iterator proteinIterator = proteinSurfaceDescriptor.begin();
-
-	for (auto interfaceIterator = interfaceSideDescriptor.begin(); interfaceIterator != interfaceSideDescriptor.end(); ++interfaceIterator)
-	{
-		//cout << endl << interfaceIterator->first;
-		//getchar();
-		interfaceFragmentsCount += interfaceIterator->second;
-
-		while (proteinIterator != proteinSurfaceDescriptor.end() && proteinIterator->first < interfaceIterator->first)
+		/*
+		cout << endl;
+		for (auto it1 = proteinSurfaceDescriptor.cbegin(); it1 != proteinSurfaceDescriptor.cend(); ++it1)
 		{
-
-			//cout << endl << proteinIterator->first;
-			//getchar();
-			proteinIterator++;
+			cout << it1->first << " " << it1->second << " ";
 		}
+		//getchar();
 
-		if (proteinIterator != proteinSurfaceDescriptor.end())
+		cout << endl;
+		for (auto it1 = interfaceSideDescriptor.cbegin(); it1 != interfaceSideDescriptor.cend(); ++it1)
 		{
-			if (proteinIterator->first == interfaceIterator->first)
-			{
-				if (proteinIterator->second >= interfaceIterator->second)
-					includedFragmentsCount += interfaceIterator->second;
-				else
-					includedFragmentsCount += interfaceIterator->second - proteinIterator->second;
+			cout << it1->first << " " << it1->second << " ";
+		}
+		getchar();
+		*/
 
+
+		int includedFragmentsCount = 0;
+		int interfaceFragmentsCount = 0;
+		map<int, int>::iterator proteinIterator = proteinSurfaceDescriptor.begin();
+
+		for (auto interfaceIterator = interfaceSideDescriptor.begin(); interfaceIterator != interfaceSideDescriptor.end(); ++interfaceIterator)
+		{
+
+			interfaceFragmentsCount += interfaceIterator->second;
+
+			while (proteinIterator != proteinSurfaceDescriptor.end() && proteinIterator->first < interfaceIterator->first)
+			{
 				proteinIterator++;
 			}
+
+			if (proteinIterator != proteinSurfaceDescriptor.end())
+			{
+				if (proteinIterator->first == interfaceIterator->first)
+				{
+					if (proteinIterator->second >= interfaceIterator->second)
+						includedFragmentsCount += interfaceIterator->second;
+					else
+						includedFragmentsCount += proteinIterator->second;
+
+					proteinIterator++;
+				}
+			}
 		}
+
+		interfaceSurfaceSimilarityRate = (double)includedFragmentsCount / (double)interfaceFragmentsCount;
+
 	}
 
-	//cout << endl << interfaceFragmentsCount;
-	//cout << endl << includedFragmentsCount;
+	else if (similarityMetric == "Cosine")
+	{
 
-	float interfaceSurfaceSimilarityRate = float(includedFragmentsCount) / float(interfaceFragmentsCount);
-	//cout << endl << interfaceSurfaceSimilarityRate;
+		//Calculate cosine distance
+		double mul = 0.0, d_a = 0.0, d_b = 0.0;
+		for (int k = 1; k <= numberOfClusters; ++k)
+		{
+			mul += proteinSurfaceDescriptor[k] * interfaceSideDescriptor[k];
+			d_a += proteinSurfaceDescriptor[k] * proteinSurfaceDescriptor[k];
+			d_b += interfaceSideDescriptor[k] * interfaceSideDescriptor[k];
+		}
+
+		double cosineSimilarity = mul / (sqrt(d_a) * sqrt(d_b));
+		interfaceSurfaceSimilarityRate = cosineSimilarity;
+		
+	}
+	else if (similarityMetric == "Euclidean")
+	{
+
+		double sumDist = 0.0;
+		for (int k = 1; k <= numberOfClusters; ++k)
+			sumDist += pow(proteinSurfaceDescriptor[k] - interfaceSideDescriptor[k], 2.0);	
+
+		double EuclideanDistance = sqrt(sumDist);
+		interfaceSurfaceSimilarityRate = EuclideanDistance;
+		
+	}
+	else if (similarityMetric == "HistogramIntersection")
+	{
+		double sumMin = 0.0, sumInterface = 0.0, sumSurface = 0.0;
+		for (int k = 1; k <= numberOfClusters; ++k)
+		{
+			sumMin += min(proteinSurfaceDescriptor[k], interfaceSideDescriptor[k]);
+			sumSurface += proteinSurfaceDescriptor[k];
+			sumInterface += interfaceSideDescriptor[k];
+		}
+
+		double histogramIntersection = sumMin / min(sumSurface, sumInterface);
+		interfaceSurfaceSimilarityRate = histogramIntersection;
+	}
 
 	return interfaceSurfaceSimilarityRate;
-
 }
 
+
+//****************************************************************************************
+float CalculateSimilaritiyBetweenProteinDescriptorAndInterfaceSideDescriptor(map<int, int> proteinSurfaceDescriptor, map<int, int> interfaceSideDescriptor, int numberOfClusters)
+{
+
+	
+
+}

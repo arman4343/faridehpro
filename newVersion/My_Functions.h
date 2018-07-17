@@ -4,6 +4,10 @@
 #include <map>
 #include <list>
 
+
+#define numberOfInterfaces 45222
+
+
 struct Point
 {
 	float x = 0, y = 0, z = 0;
@@ -47,9 +51,9 @@ int CompareProteinsWithInterfaces_v3(std::string, int, int, int, int);
 void CreateProteinSurfaceGraph(std::vector <FragmentInfo>&, std::vector <std::string>&, std::vector<std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>>&, int, int, int, int);
 
 //CompareProteinSurfaceWithInterfaces
-int CreateProteinDescriptorAndCompare(std::string, int, int, int, int, int);
+int CreateProteinDescriptorAndCompare(int, std::string, int, int, int, int);
 void CreateProteinDescriptors_v3(std::map<int, int>&, std::vector <std::string>&, std::vector<std::unordered_map<float, std::unordered_map<float, std::unordered_map<float, std::vector <std::string>>>>>&, int, int, int, int);
-float CompareProteinDescriptorWithInterfaceSideDescriptor(std::map<int, int>, std::map<int, int>);
+double CompareProteinDescriptorWithInterfaceSideDescriptor(std::map<int, int>, std::map<int, int>, int, std::string);
 
 
 
@@ -81,5 +85,6 @@ void CompareProteinWithInterfaces(int, int, int, int, int);
 int CompareProteinWithInterfaces_v1(int, int, int, int, int);
 int CompareProteinWithInterfaces_v2(int, int, int, int, int);
 bool CompareProteinSurfaceWithInterfaceSide(std::map<int, int>, std::map<int, int>, float);
+float CalculateSimilaritiyBetweenProteinDescriptorAndInterfaceSideDescriptor(std::map<int, int>, std::map<int, int>, int);
 
 #endif
