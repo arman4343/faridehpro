@@ -46,7 +46,7 @@ int main(void)
 	int binSize = 2;	//used for clustering
 	int minNumberOfClusterMembers = 5;
 
-	int topXresults = 10;	//Percent
+	int topXresults = 100;	//Percent
 	string similarityMetric = "Inclusion";	//"Inclusion", "Cosine", "Euclidean", "HistogramIntersection" 
 
 	int result = 0;

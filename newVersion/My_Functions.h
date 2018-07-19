@@ -85,6 +85,5 @@ void CompareProteinWithInterfaces(int, int, int, int, int);
 int CompareProteinWithInterfaces_v1(int, int, int, int, int);
 int CompareProteinWithInterfaces_v2(int, int, int, int, int);
 bool CompareProteinSurfaceWithInterfaceSide(std::map<int, int>, std::map<int, int>, float);
-float CalculateSimilaritiyBetweenProteinDescriptorAndInterfaceSideDescriptor(std::map<int, int>, std::map<int, int>, int);
 
 #endif

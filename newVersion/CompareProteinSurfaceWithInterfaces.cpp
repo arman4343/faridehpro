@@ -208,7 +208,7 @@ int CreateProteinDescriptorAndCompare(int topXresults, string similarityMetric, 
 	try
 	{
 
-		interfacesSimilarToProteinsFile.open(rootDir + "Filtering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/Top" + to_string(topXresults) + "%_" + similarityMetric + "Based_Interfaces_Similar_To_Proteins.txt");
+		interfacesSimilarToProteinsFile.open(rootDir + "Filtering_Results/FrLn" + to_string(fragmentLength) + "_OvRd" + to_string(overlappingResidues) + "_MtPn" + to_string(expectedMatchedPoints) + "_BnSz" + to_string(binSize) + "/TestTop" + to_string(topXresults) + "%_" + similarityMetric + "Based_Interfaces_Similar_To_Proteins.txt");
 
 		if (interfacesSimilarToProteinsFile.fail())
 		{
@@ -339,7 +339,7 @@ int CreateProteinDescriptorAndCompare(int topXresults, string similarityMetric, 
 					{
 
 						interfaceSideName = interfacesList[i];
-						float similarityRate = 0;
+						double similarityRate = 0;
 
 						if ((int)PrismInterfaceDescriptors[interfaceSideName].size() > 0)
 						{
@@ -347,23 +347,30 @@ int CreateProteinDescriptorAndCompare(int topXresults, string similarityMetric, 
 							int numberOfClusters = fragmentHashTables.size();
 
 							similarityRate = CompareProteinDescriptorWithInterfaceSideDescriptor(proteinSurfaceDescriptor, PrismInterfaceDescriptors[interfaceSideName], numberOfClusters, similarityMetric);
-							interfaceSimilarities.insert(pair<float, string>(similarityRate, interfaceSideName));
+							//cout << endl << similarityRate;
+							interfaceSimilarities.insert(pair<double, string>(similarityRate, interfaceSideName));
 
 						}
 					}
 
 					
 					int resultsIndex = 0;
+					//cout << endl << similarityMetric;
 					
 					if (similarityMetric == "Euclidean")
+					{
 						for (auto it1 = interfaceSimilarities.begin(); it1 != interfaceSimilarities.end(); ++it1)
 							if (resultsIndex++ < numberOfResults)
 								interfacesSimilarToProteinsFile << it1->second << "\t" << it1->first << endl;
+					}
 
 					else if (similarityMetric == "Inclusion" || similarityMetric == "Cosine" || similarityMetric == "HistogramIntersection")
+					{
 						for (auto it1 = interfaceSimilarities.rbegin(); it1 != interfaceSimilarities.rend(); ++it1)
 							if (resultsIndex++ < numberOfResults)
+								//cout << endl << it1->second << "\t" << it1->first;
 								interfacesSimilarToProteinsFile << it1->second << "\t" << it1->first << endl;
+					}
 
 					
 
@@ -611,11 +618,3 @@ double CompareProteinDescriptorWithInterfaceSideDescriptor(map<int, int> protein
 	return interfaceSurfaceSimilarityRate;
 }
 
-
-//****************************************************************************************
-float CalculateSimilaritiyBetweenProteinDescriptorAndInterfaceSideDescriptor(map<int, int> proteinSurfaceDescriptor, map<int, int> interfaceSideDescriptor, int numberOfClusters)
-{
-
-	
-
-}
